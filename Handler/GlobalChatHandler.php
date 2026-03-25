@@ -9,7 +9,7 @@ $mysqli = dbConnection();
 $globalChatService = new GlobalChatService($mysqli);
 
 switch($action){
-    case 'getLogs':
+    case 'getGlobalLogs':
         echo json_encode($globalChatService->getLogs());
         exit;
 

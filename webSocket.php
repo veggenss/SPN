@@ -73,57 +73,62 @@ class Chat implements MessageComponentInterface {
 
     // når en melding blir sendt
     public function onMessage(ConnectionInterface $fromConn, $msg):void{
-        $data = json_decode($msg, true);
+        try {
+            $data = json_decode($msg, true);
 
-        // hvis det ikke var noe i meldingen
-        if (!$data || !isset($data['username'], $data['message'], $data['profilePictureUrl'])) {
-            return;
-        }
-
-        $userId = $this->clients[$fromConn]['userId'] ?? null;
-        if (!$userId) {
-            echo "{$this->date()} Bruker-ID mangler fra tilkoblingen\n";
-            file_put_contents(__DIR__ . '/WebSocket_error.log', "{$this->date()} Bruker-ID mangler fra tilkoblingen\n", FILE_APPEND);
-            return;
-        }
-
-        // dataen fra meldingen
-        $messageData = [
-            'recipientId' => $data['recipientId'],
-            'type' => $data['type'],
-            'username' => $data['username'],
-            'userId' => $data['userId'],
-            'profilePictureUrl' => $data['profilePictureUrl'],
-            'message' => $data['message']
-        ];
-
-        // sjekker hvis du er i global chat, og logger deretter til global_chat_log.txt :D
-        if ($data['type'] === 'global' && $data['recipientId'] === 'all') {
-            $encodedMessage = json_encode($messageData);
-
-            $response = $this->globalChatService->pushMessage($messageData);
-
-            if(!$response['success']){
-                echo $response['message'];
+            // hvis det ikke var noe i meldingen
+            if (!$data || !isset($data['username'], $data['message'], $data['profilePictureUrl'])) {
                 return;
             }
 
-            foreach ($this->clients as $clientConn) {
-                $clientConn->send($encodedMessage);
+            $userId = $this->clients[$fromConn]['userId'] ?? null;
+            if (!$userId) {
+                echo "{$this->date()} Bruker-ID mangler fra tilkoblingen\n";
+                file_put_contents(__DIR__ . '/WebSocket_error.log', "{$this->date()} Bruker-ID mangler fra tilkoblingen\n", FILE_APPEND);
+                return;
+            }
+
+            // dataen fra meldingen
+            $messageData = [
+                'recipientId' => $data['recipientId'],
+                'type' => $data['type'],
+                'username' => $data['username'],
+                'userId' => $userId,
+                'profilePictureUrl' => $data['profilePictureUrl'],
+                'message' => $data['message']
+            ];
+
+            // sjekker hvis du er i global chat, og logger deretter til global_chat_log.txt :D
+            if ($data['type'] === 'global' && $data['recipientId'] === 'all') {
+                $encodedMessage = json_encode($messageData);
+
+                $response = $this->globalChatService->pushMessage($messageData);
+
+                if (!$response['success']) {
+                    echo $response['message'];
+                    return;
+                }
+
+                foreach ($this->clients as $clientConn) {
+                    $clientConn->send($encodedMessage);
+                }
+            }
+
+            // hvis du ikke er i global chat, call heller på directMessage() funksjonen og pass messageData over til den
+            elseif ($data['type'] === 'direct' && $data['recipientId'] !== 'all') {
+                $dmResponse = $this->dmService->directMessageInsert($messageData);
+                if (!$dmResponse['success']) {
+                    echo $dmResponse['message'];
+                    return;
+                }
+                if (!$this->dmService->previewString($dmResponse['convId'], $messageData['message']))
+                    return;
+                $messageData['convId'] = $dmResponse['convId'];
+                $this->sendToUser($messageData['userId'], $messageData['recipientId'], json_encode($messageData));
             }
         }
-
-        // hvis du ikke er i global chat, call heller på directMessage() funksjonen og pass messageData over til den
-        elseif ($data['type'] === 'direct' && $data['recipientId'] !== 'all') {
-            $dmResponse = $this->dmService->directMessageInsert($messageData);
-            if(!$dmResponse['success']){
-                echo $dmResponse['message'];
-                return;
-            }
-            if (!$this->dmService->previewString($dmResponse['convId'], $messageData['message']))
-                return;
-            $messageData['convId'] = $dmResponse['convId'];
-            $this->sendToUser($messageData['userId'], $messageData['recipientId'], json_encode($messageData));
+        catch (\Throwable $e){
+            file_put_contents(__DIR__ . '/WebSocket_error.log', $this->date() . " Error: " . $e->getMessage() . "\n" . $e->getTraceAsString() . "\n", FILE_APPEND);
         }
     }
 

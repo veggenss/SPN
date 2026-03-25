@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 class DmService{
     private mysqli $mysqli;
 
@@ -87,14 +88,12 @@ class DmService{
             ORDER BY c.id DESC";
 
        $conversations = [];
-
        $stmt = $this->mysqli->prepare($query);
        $stmt->bind_param("iii", $user_id, $user_id, $user_id);
        $stmt->execute();
        $result = $stmt->get_result();
 
        while ($row = $result->fetch_assoc()) {
-
            $profile_picture = $row['recipient_profile_icon'] ?? 'default.png';
            $profile_picture_url = '/samtalerpanett/uploads/' . ltrim($profile_picture, '/');
 

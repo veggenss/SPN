@@ -107,14 +107,37 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function loadGlobalLog(){
-        fetch('/samtalerpanett/Handler/GlobalChatHandler.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({action: 'getLogs'})
-        })
-        .then(res => res.json())
-        .then(data => {
+    // function loadGlobalLog(){
+    //     fetch('/samtalerpanett/Handler/GlobalChatHandler.php', {
+    //         method: 'POST',
+    //         headers: { 'Content-Type': 'application/json' },
+    //         body: JSON.stringify({action: 'getLogs'})
+    //     })
+    //     .then(res => res.json())
+    //     .then(data => {
+    //         messagesDiv.innerHTML = '';
+    //         console.log("Global message data:", data);
+    //         data.globalLog.forEach(message => {
+    //             const standardized = {
+    //                 userId: message.sender_id,
+    //                 username: message.sender_name,
+    //                 profilePictureUrl: message.sender_pfp,
+    //                 message: message.message
+    //             };
+    //             appendMessage(standardized);
+    //         })
+    //     })
+    // }
+
+    async function loadGlobalLog() {
+        try {
+            const req = await fetch('/samtalerpanett/Handler/GlobalChatHandler.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'getGlobalLogs' })
+            });
+            const data = await req.json();
+
             messagesDiv.innerHTML = '';
             console.log("Global message data:", data);
             data.globalLog.forEach(message => {
@@ -126,7 +149,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
                 appendMessage(standardized);
             })
-        })
+        } catch (err) {
+            console.error("Failed to load globalChatLogs: ", err);
+        }
     }
 
     function loadConversationDiv() {
