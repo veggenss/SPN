@@ -107,28 +107,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // function loadGlobalLog(){
-    //     fetch('/samtalerpanett/Handler/GlobalChatHandler.php', {
-    //         method: 'POST',
-    //         headers: { 'Content-Type': 'application/json' },
-    //         body: JSON.stringify({action: 'getLogs'})
-    //     })
-    //     .then(res => res.json())
-    //     .then(data => {
-    //         messagesDiv.innerHTML = '';
-    //         console.log("Global message data:", data);
-    //         data.globalLog.forEach(message => {
-    //             const standardized = {
-    //                 userId: message.sender_id,
-    //                 username: message.sender_name,
-    //                 profilePictureUrl: message.sender_pfp,
-    //                 message: message.message
-    //             };
-    //             appendMessage(standardized);
-    //         })
-    //     })
-    // }
-
     async function loadGlobalLog() {
         try {
             const req = await fetch('/samtalerpanett/Handler/GlobalChatHandler.php', {
@@ -149,72 +127,72 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
                 appendMessage(standardized);
             })
-        } catch (err) {
-            console.error("Failed to load globalChatLogs: ", err);
+        } 
+        catch(err){
+            console.error('Failed to load globalChatLogs(); ', err);
         }
     }
-
-    function loadConversationDiv() {
-        fetch('/samtalerpanett/Handler/DmHandler.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'loadConversationDiv', user_id: currentUserId })
-        })
-        .then(res => res.json())
-        .then(data => {
+    
+    async function loadConversationDiv(){
+        try{
+            const req = await fetch('/samtalerpanett/Handler/DmHandler.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'loadConversationDiv', user_id: currentUserId })
+            });
+            const data = await req.json();
+            
             console.log("loadConvData:", data);
             if (data.success === true && Array.isArray(data.conversations)) {
                 data.conversations.forEach(conv => {
                     renderConversationList(conv);
                 })
             }
-        })
-        .catch(err => {
-            console.error('LoadConvDivErr', err);
-        })
+        }
+        catch(err){
+            console.error('ConversationDiv(); ', err);
+        }
     }
-
-    function newConversation() {
-        const reciverUser = prompt("Skriv in brukernavn til bruker du vil ha samtale med");
-        if (!reciverUser) {
-            return;
-        }
-        if (currentUsername === reciverUser) {
-            alert("Du kan ikke starte samtale med degselv");
-            return;
-        }
-
-        fetch('/samtalerpanett/Handler/DmHandler.php?action=getUserId&reciverUser=' + encodeURIComponent(reciverUser))
-        .then(res => res.json())
-        .then(data => {
-            console.log("reciverUserData", data);
-            if (data.success === false) {
-                alert(data.response);
+    
+    async function newConversation(){
+        try{
+            const reciverUser = prompt('Skriv in brukernavn til bruker du vil ha samtale med');
+            if (!reciverUser) {
                 return;
             }
-            fetch('/samtalerpanett/Handler/DmHandler.php', {
+            if (currentUsername === reciverUser) {
+                alert('Du kan ikke starte samtale med degselv');
+                return;
+            }
+            
+            const reciverUserReq = await fetch('/samtalerpanett/Handler/DmHandler.php?action=getUserId&reciverUser=' + encodeURIComponent(reciverUser));
+            const reciverUserData = await reciverUserReq.json();
+            if(reciverUserData.success === false){
+                alert(reciverUserData.response);
+                console.warn(reciverUserData.response);
+                return;
+            }
+            
+            const createConversationReq = await fetch('/samtalerpanett/Handler/DmHandler.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({action: 'createConversation', user1_id: currentUserId, user2_id: data.reciverUserId })
-            })
-            .then(res => res.json())
-            .then(data => {
-                console.log("createConvData", data);
-                if (data.success === false) {
-                    alert(data.response);
-                    return;
-                }
-                alert(data.response);
-                loadConversationDiv();
-            })
-            .catch(err => {
-                console.error('NewConvErr_createConv', err);
-            })
-        })
-        .catch(err => {
-            console.error('NewConvErr_getUserId', err);
-        })
+                body: JSON.stringify({action: 'createConversation', user1_id: currentUserId, user2_id: reciverUserData.reciverUserId })
+            });
+            const createConversationData = await createConversationReq.json();
+            if(createConversationData.success === false){
+                alert(createConversationData.response);
+                console.warn(createConversationData.response);
+                return;
+            }
+            console.log('createConversationData', createConversationData);
+            alert(createConversationData.response);
+            loadConversationDiv();            
+        }
+        catch(err){
+            console.error('newConversation(); ', err)
+        }
     }
+    
 
     function renderConversationList(conv) {
         if (document.getElementById('conversation-' + conv.conversation_id)) return;
@@ -257,30 +235,30 @@ document.addEventListener('DOMContentLoaded', () => {
         dmList.appendChild(wrapper);
     }
 
-    function loadConvLog(conv) {
-        messagesDiv.innerHTML = '';
-
-        fetch('/samtalerpanett/Handler/DmHandler.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({action: 'loadConversationLog', conversation_id: conv.conversation_id, user2_id: conv.recipientId, user1_id: currentUserId, user1_name: currentUsername, user2_name: conv.recipientUsername})
-        })
-        .then(res => res.json())
-        .then(data => {
-            console.log("loadConvMsgData:", data)
-            if (data.success === false) {
-                alert(data.response);
+    async function loadConvLog(conv){
+        try{
+            const loadLogReq = await fetch('/samtalerpanett/Handler/DmHandler.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({action: 'loadConversationLog', conversation_id: conv.conversation_id, user2_id: conv.recipientId, user1_id: currentUserId, user1_name: currentUsername, user2_name: conv.recipientUsername})
+            });
+            const loadLogData = await loadLogReq.json();
+            
+            if(loadLogData.success === false){
+                alert(loadLogData.response);
+                console.warn(loadLogData.response);
                 return;
             }
+            
             messagesDiv.innerHTML = '';
-            data.messageData.forEach(message => {
+            loadLogData.messageData.forEach(message => {
                 appendMessage(message, true);
                 messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            })
-        })
-        .catch(err => {
-                console.error('LoadConvLog', err);
-        })
+            });
+        }
+        catch(err){
+            console.error('loadConversation(); ', err);
+        }
     }
 
     function sendMessage() {

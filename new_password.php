@@ -2,11 +2,11 @@
 require_once 'include/db.inc.php';
 $mysqli = dbConnection();
 
-$verified = null;
-$message = null;
-$error = null;
-$redirect = null;
-$invalid = null;
+// $verified = null;
+// $message = null;
+// $error = null;
+// $redirect = null;
+// $invalid = null;
 
 if(isset($_GET['token'])){
     $token = $_GET['token'];
