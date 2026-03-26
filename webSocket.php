@@ -5,7 +5,6 @@ use Ratchet\App;
 use Ratchet\WebSocket\WsConnection;
 use Spn\Service\DirectMessage;
 use Spn\Service\GlobalChat;
-use function Spn\Database\Connection;
 use function Spn\Database\SocketParams;
 
 require __DIR__ . '/vendor/autoload.php';
