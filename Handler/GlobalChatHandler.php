@@ -1,20 +1,22 @@
 <?php
-require '../include/db.inc.php';
-require '../Service/GlobalChatService.php';
+session_start();
+header('Content-Type: application/json');
 
+require '../Service/GlobalChat.php';
+
+use Spn\Service\GlobalChat;
+
+$globalChat = new GlobalChat();
 $data = json_decode(file_get_contents("php://input"), true);
 $action = $data['action'] ?? NULL;
-$mysqli = dbConnection();
-
-$globalChatService = new GlobalChatService($mysqli);
 
 switch($action){
     case 'getGlobalLogs':
-        echo json_encode($globalChatService->getLogs());
+        echo json_encode($globalChat->getLogs());
         exit;
 
     case 'pushMessage':
-        echo json_encode($globalChatService->pushMessage($action['message']));
+        echo json_encode($globalChat->pushMessage($action['message']));
         exit;
 
     default:

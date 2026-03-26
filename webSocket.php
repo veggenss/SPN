@@ -3,31 +3,49 @@ use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
 use Ratchet\App;
 use Ratchet\WebSocket\WsConnection;
+use Spn\Service\DirectMessage;
+use Spn\Service\GlobalChat;
+use function Spn\Database\Connection;
+use function Spn\Database\SocketParams;
 
 require __DIR__ . '/vendor/autoload.php';
 require __DIR__ . '/include/db.inc.php';
-require __DIR__ . '/Service/DmService.php';
-require __DIR__ . '/Service/GlobalChatService.php';
+require __DIR__ . '/Service/DirectMessage.php';
+require __DIR__ . '/Service/GlobalChat.php';
 
-$mysqli = dbConnection();
-$socketParams = socketParams();
+$socketParams = SocketParams();
 
 class Chat implements MessageComponentInterface {
     protected $clients;
     protected $userConnections = [];
-    private GlobalChatService $globalChatService;
-    private DmService $dmService;
+    private GlobalChat $globalChatService;
+    private DirectMessage $directMessage;
 
     public function __construct() {
         $this->clients = new \SplObjectStorage();
-        $this->dmService = new DmService(dbConnection());
-        $this->globalChatService = new GlobalChatService(dbConnection());
+        $this->directMessage = new DirectMessage();
+        $this->globalChatService = new GlobalChat();
     }
 
     private function date():string{
         return date("[Y/m/d l:H:i:s]");
     }
+    
+    private function sendToUser(int $userId, int $recipientId, string $message):void{
+        if (isset($this->userConnections[$userId])) {
+            foreach ($this->userConnections[$userId] as $conn) {
+                $conn->send($message);
+            }
+        }
 
+        // sender meldingen til mottaker
+        if (isset($this->userConnections[$recipientId])) {
+            foreach ($this->userConnections[$recipientId] as $conn) {
+                $conn->send($message);
+            }
+        }
+    }
+    
     public function onOpen(ConnectionInterface $conn):void{
 
         /** @var WsConnection $conn */
@@ -52,22 +70,6 @@ class Chat implements MessageComponentInterface {
         else {
             echo "{$this->date()} Ukjent bruker koblet til {$resourceId}\n";
             file_put_contents(__DIR__ . '/webSocketLog.syslog', "{$this->date()} Ukjent bruker koblet til {$resourceId}\n", FILE_APPEND);
-        }
-    }
-
-    // sender meldinger til brukere
-    private function sendToUser(int $userId, int $recipientId, string $message):void{
-        if (isset($this->userConnections[$userId])) {
-            foreach ($this->userConnections[$userId] as $conn) {
-                $conn->send($message);
-            }
-        }
-
-        // sender meldingen til mottaker
-        if (isset($this->userConnections[$recipientId])) {
-            foreach ($this->userConnections[$recipientId] as $conn) {
-                $conn->send($message);
-            }
         }
     }
 
@@ -116,12 +118,12 @@ class Chat implements MessageComponentInterface {
 
             // hvis du ikke er i global chat, call heller på directMessage() funksjonen og pass messageData over til den
             elseif ($data['type'] === 'direct' && $data['recipientId'] !== 'all') {
-                $dmResponse = $this->dmService->directMessageInsert($messageData);
+                $dmResponse = $this->directMessage->directMessageInsert($messageData);
                 if (!$dmResponse['success']) {
                     echo $dmResponse['message'];
                     return;
                 }
-                if (!$this->dmService->previewString($dmResponse['convId'], $messageData['message']))
+                if (!$this->directMessage->previewString($dmResponse['convId'], $messageData['message']))
                     return;
                 $messageData['convId'] = $dmResponse['convId'];
                 $this->sendToUser($messageData['userId'], $messageData['recipientId'], json_encode($messageData));

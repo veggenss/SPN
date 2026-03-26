@@ -1,12 +1,9 @@
 <?php
-require_once 'include/db.inc.php';
-$mysqli = dbConnection();
+require_once __DIR__ . '/include/db.inc.php';
 
-// $verified = null;
-// $message = null;
-// $error = null;
-// $redirect = null;
-// $invalid = null;
+use function Spn\Database\Connection;
+
+$mysqli = Connection();
 
 if(isset($_GET['token'])){
     $token = $_GET['token'];

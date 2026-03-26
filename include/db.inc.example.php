@@ -1,5 +1,9 @@
 <?php
-function dbConnection()
+declare(strict_types=1);
+
+namespace Spn\Database;
+
+function connection()
 {
     $db_server = "localhost";
     $db_user = "dbUsername";

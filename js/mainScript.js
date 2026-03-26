@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     async function loadConversationDiv(){
         try{
-            const req = await fetch('/samtalerpanett/Handler/DmHandler.php', {
+            const req = await fetch('/samtalerpanett/Handler/DirectMessageHandler.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'loadConversationDiv', user_id: currentUserId })
@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
-            const reciverUserReq = await fetch('/samtalerpanett/Handler/DmHandler.php?action=getUserId&reciverUser=' + encodeURIComponent(reciverUser));
+            const reciverUserReq = await fetch('/samtalerpanett/Handler/DirectMessageHandler.php?action=getUserId&reciverUser=' + encodeURIComponent(reciverUser));
             const reciverUserData = await reciverUserReq.json();
             if(reciverUserData.success === false){
                 alert(reciverUserData.response);
@@ -173,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
-            const createConversationReq = await fetch('/samtalerpanett/Handler/DmHandler.php', {
+            const createConversationReq = await fetch('/samtalerpanett/Handler/DirectMessageHandler.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({action: 'createConversation', user1_id: currentUserId, user2_id: reciverUserData.reciverUserId })
@@ -237,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadConvLog(conv){
         try{
-            const loadLogReq = await fetch('/samtalerpanett/Handler/DmHandler.php', {
+            const loadLogReq = await fetch('/samtalerpanett/Handler/DirectMessageHandler.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({action: 'loadConversationLog', conversation_id: conv.conversation_id, user2_id: conv.recipientId, user1_id: currentUserId, user1_name: currentUsername, user2_name: conv.recipientUsername})

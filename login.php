@@ -1,9 +1,11 @@
 <?php
 session_start();
-require_once 'include/db.inc.php';
-require_once 'functions.php';
+require_once __DIR__ . '/include/db.inc.php';
+require_once __DIR__ . '/functions.php';
 
-$mysqli = dbConnection();
+use function Spn\Database\Connection;
+
+$mysqli = Connection();
 
 if(isset($_COOKIE['not_verified'])){
     $cookie_message = $_COOKIE['not_verified'];

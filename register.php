@@ -1,9 +1,11 @@
 <?php
-require_once "include/db.inc.php";
-$mysqli = dbConnection();
+require_once __DIR__ . '/include/db.inc.php';
+
+use function Spn\Database\Connection;
+
+$mysqli = Connection();
 
 $registerd = null;
-
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // default profilbilde

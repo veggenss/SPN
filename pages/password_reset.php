@@ -1,13 +1,16 @@
 <?php
 session_start();
+require_once __DIR__ . '../include/db.inc.php';
+
+use function Spn\Database\Connection;
+
+$mysqli = Connection();
+
 if (!isset($_SESSION['user_id'])) {
     // hvis brukeren ikke er logget inn, redirect til login
     header("Location: ../login.php");
     exit();
 }
-
-require_once '../include/db.inc.php';
-$mysqli = dbConnection();
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
 

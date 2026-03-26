@@ -1,10 +1,15 @@
 <?php
-declare(strict_types=1);
-class GlobalChatService{
-    private mysqli $mysqli;
+namespace Spn\Service;
 
-    public function __construct(mysqli $mysqli){
-        $this->mysqli = $mysqli;
+require_once __DIR__ . '/../include/db.inc.php';
+
+use function Spn\Database\Connection;
+
+class GlobalChat{
+    private \mysqli $mysqli;
+
+    public function __construct(){
+        $this->mysqli = Connection();
     }
 
     public function getLogs():array{

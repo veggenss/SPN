@@ -1,10 +1,15 @@
 <?php
-declare(strict_types=1);
-class DmService{
-    private mysqli $mysqli;
+namespace Spn\Service;
 
-    public function __construct(mysqli $mysqli){
-        $this->mysqli = $mysqli;
+require_once __DIR__ . '/../include/db.inc.php';
+
+use function Spn\Database\Connection;
+
+class DirectMessage{
+    private \mysqli $mysqli;
+
+    public function __construct(){
+        $this->mysqli = Connection();
    }
 
    private function getUserIcon(int $user_id):string{
