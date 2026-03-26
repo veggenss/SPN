@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '../include/db.inc.php';
+require_once '../include/db.inc.php';
 
 use function Spn\Database\Connection;
 
@@ -23,35 +23,31 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
         $user = $result->fetch_assoc();
 
         if(!$user){
-            $error = "Kunne ikke finne bruker";
+            $error = "Brukernavn og E-post passer ikke";
         }
     }
 
-    if(!isset($error)){
-          if($user){
+    if(!isset($error) && isset($user)){
+        $token = bin2hex(random_bytes(16));
 
-            $token = bin2hex(random_bytes(16));
+        $sql = "UPDATE users SET password_reset_token = ? WHERE mail = ? AND username = ?";
+        $stmt = $mysqli->prepare($sql);
+        $stmt->bind_param("sss", $token, $email, $username);
 
-            $sql = "UPDATE users SET password_reset_token = ? WHERE mail = ? AND username = ?";
-            $stmt = $mysqli->prepare($sql);
-            $stmt->bind_param("sss", $token, $email, $username);
-
-            if($stmt->execute()){
-                require 'mailer/send_reset_password_email.php';
-                $config = require __DIR__ . '/mailer/config.php';
-                if(sendResetPasswordMail($email, $username, $token, $config)){
-                    $sent = "E-post sent til $email";
-                }
-                else{
-                    $sent = false;
-                    $error = "Kunne ikke sende e-post";
-                }
+        if($stmt->execute()){
+            require '../mailer/send_reset_password_email.php';
+            $config = require '../mailer/config.php';
+            if(sendResetPasswordMail($email, $username, $token, $config)){
+                $sent = "E-post sent til $email";
             }
-
+            else{
+                $sent = false;
+                $error = "Kunne ikke sende e-post";
+            }
         }
-        else{
-            $error = "Ugyldig e-post eller brukernavn";
-        }
+    }
+    else{
+        $error = "Ugyldig e-post eller brukernavn";
     }
 }
 ?>

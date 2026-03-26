@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once __DIR__ . '../include/db.inc.php';
+require_once '../include/db.inc.php';
 
 use function Spn\Database\Connection;
 

@@ -1,7 +1,6 @@
 <?php
 $mail_message = null;
 
-
 if(isset($_COOKIE['mail_message'])){
     $mail_message = $_COOKIE['mail_message'];
     setcookie("mail_message", "", time() - 3600, "/");

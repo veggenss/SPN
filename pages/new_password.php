@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/include/db.inc.php';
+require_once '../include/db.inc.php';
 
 use function Spn\Database\Connection;
 
@@ -18,11 +18,11 @@ if(isset($_GET['token'])){
         $verified = true;
     }
     else{
-        $invalid = "Ugyldig eller utløpt token! <br><br><a href='login.php'>logg inn her</a>";
+        $invalid = "Ugyldig eller utløpt token! <br><br><a href='../login.php'>logg inn her</a>";
     }
 }
 else{
-    header("Location: login.php");
+    header("Location: ../login.php");
 }
 
 if($verified && $_SERVER['REQUEST_METHOD'] == 'POST'){
@@ -66,7 +66,7 @@ if($verified && $_SERVER['REQUEST_METHOD'] == 'POST'){
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/userRegLog.css">
+    <link rel="stylesheet" href="../css/userRegLog.css">
     <link rel="icon" href="assets/icons/logo.ico">
     <title>Samtaler på nett | Tilbakestill Passord</title>
 </head>
@@ -116,7 +116,7 @@ if($verified && $_SERVER['REQUEST_METHOD'] == 'POST'){
     </div>
     <?php
     if (isset($redirect) && $redirect) {
-        echo '<meta http-equiv="refresh" content="5;url=login.php">';
+        echo '<meta http-equiv="refresh" content="5;url=../login.php">';
     }
     ?>
 </body>
