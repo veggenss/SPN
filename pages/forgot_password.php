@@ -1,9 +1,10 @@
 <?php
 require_once '../include/db.inc.php';
 
-use function Spn\Database\Connection;
+use Spn\Database\WebServer;
 
-$mysqli = Connection();
+$webServer = new WebServer();
+$mysqli = $webServer->connect();
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
 

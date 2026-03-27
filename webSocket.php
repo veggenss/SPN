@@ -5,14 +5,14 @@ use Ratchet\App;
 use Ratchet\WebSocket\WsConnection;
 use Spn\Service\DirectMessage;
 use Spn\Service\GlobalChat;
-use function Spn\Database\SocketParams;
+use  Spn\Database\WebServer;
 
 require __DIR__ . '/vendor/autoload.php';
 require __DIR__ . '/include/db.inc.php';
 require __DIR__ . '/Service/DirectMessage.php';
 require __DIR__ . '/Service/GlobalChat.php';
 
-$socketParams = SocketParams();
+$socketParams = new WebServer();
 
 class Chat implements MessageComponentInterface {
     protected $clients;
@@ -29,7 +29,7 @@ class Chat implements MessageComponentInterface {
     private function date():string{
         return date("[Y/m/d l:H:i:s]");
     }
-    
+
     private function sendToUser(int $userId, int $recipientId, string $message):void{
         if (isset($this->userConnections[$userId])) {
             foreach ($this->userConnections[$userId] as $conn) {
@@ -44,7 +44,7 @@ class Chat implements MessageComponentInterface {
             }
         }
     }
-    
+
     public function onOpen(ConnectionInterface $conn):void{
 
         /** @var WsConnection $conn */
@@ -117,7 +117,7 @@ class Chat implements MessageComponentInterface {
 
             // hvis du ikke er i global chat, call heller på directMessage() funksjonen og pass messageData over til den
             elseif ($data['type'] === 'direct' && $data['recipientId'] !== 'all') {
-                $dmResponse = $this->directMessage->directMessageInsert($messageData);
+                $dmResponse = $this->directMessage->pushMessage($messageData);
                 if (!$dmResponse['success']) {
                     echo $dmResponse['message'];
                     return;
@@ -164,6 +164,6 @@ class Chat implements MessageComponentInterface {
 }
 
 // lager websocket :D
-$server = new App($socketParams['hostname'], $socketParams['port']);
-$server->route($socketParams['route'], new Chat, ['*']);
+$server = new App($socketParams->socketParams()['hostname'], $socketParams->socketParams()['port']);
+$server->route($socketParams->socketParams()['route'], new Chat, ['*']);
 $server->run();

@@ -3,13 +3,14 @@ namespace Spn\Service;
 
 require_once __DIR__ . '/../include/db.inc.php';
 
-use function Spn\Database\Connection;
+use Spn\Database\WebServer;
 
 class DirectMessage{
     private \mysqli $mysqli;
 
     public function __construct(){
-        $this->mysqli = Connection();
+        $mysql = new WebServer();
+        $this->mysqli = $mysql->connect();
    }
 
    private function getUserIcon(int $user_id):string{
@@ -74,7 +75,6 @@ class DirectMessage{
    }
 
    //laster inn aktive samtaler slik at de er listet i sidepanelet
-   //@param array $data JSON payload
    public function loadConversationDiv(array $data):array{
        if (!isset($data['user_id'])) {
            return $convResponse = ["success" => false, "response" => "user_id er ikke definert"];
@@ -115,7 +115,6 @@ class DirectMessage{
         return $convResponse;
    }
 
-   //@param array $data JSON payload
    public function loadConversationLog(array $data):array{
        //laster meldinger fra messages|
        if(!isset($data['user1_id'], $data['user2_id'], $data['conversation_id'])){
@@ -160,7 +159,7 @@ class DirectMessage{
        return $convResponse;
    }
 
-   public function directMessageInsert(array $messageData):array{
+   public function pushMessage(array $messageData):array{
        // finner conversation Id hvor userid og recipient id matcher
        $conv_stmt = $this->mysqli->prepare("SELECT id FROM dm_conversations WHERE (user1_id = ? AND user2_id = ?) OR (user2_id = ? AND user1_id = ?)");
        if (!$conv_stmt) return ["success" => false, "message" => "conv_stmt failed", "error" => $this->mysqli->error];

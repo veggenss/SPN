@@ -2,9 +2,10 @@
 session_start();
 require_once '../include/db.inc.php';
 
-use function Spn\Database\Connection;
+use Spn\Database\WebServer;
 
-$mysqli = Connection();
+$webServer = new WebServer();
+$mysqli = $webServer->connect();
 
 if (!isset($_SESSION['user_id'])) {
     // hvis brukeren ikke er logget inn, redirect til login

@@ -3,9 +3,10 @@ session_start();
 require_once __DIR__ . '/include/db.inc.php';
 require_once __DIR__ . '/functions.php';
 
-use function Spn\Database\Connection;
+use Spn\Database\WebServer;
 
-$mysqli = Connection();
+$webServer = new WebServer();
+$mysqli = $webServer->connect();
 
 if(isset($_COOKIE['not_verified'])){
     $cookie_message = $_COOKIE['not_verified'];

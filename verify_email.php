@@ -1,9 +1,10 @@
 <?php
 require_once __DIR__ . '/include/db.inc.php';
 
-use function Spn\Database\Connection;
+use Spn\Database\WebServer;
 
-$mysqli = Connection();
+$webServer = new WebServer();
+$mysqli = $webServer->connect();
 
 $message = null;
 $error = null;

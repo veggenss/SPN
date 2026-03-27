@@ -3,13 +3,14 @@ namespace Spn\Service;
 
 require_once __DIR__ . '/../include/db.inc.php';
 
-use function Spn\Database\Connection;
+use Spn\Database\WebServer;
 
 class GlobalChat{
     private \mysqli $mysqli;
 
     public function __construct(){
-        $this->mysqli = Connection();
+        $mysql = new WebServer();
+        $this->mysqli = $mysql->connect();
     }
 
     public function getLogs():array{
@@ -31,5 +32,9 @@ class GlobalChat{
 
         $result && $pushStmt->affected_rows === 1 ? $response = ["success" => true, "message" => "Global message inserted"] : $response = ["success" => false, "message" => "Could not execute database insert in global_messages"];
         return $response;
+    }
+
+    public function deleteMessage():bool{
+        return 0;
     }
 }
