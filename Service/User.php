@@ -13,10 +13,16 @@ class User{
         $this->mysqli = $webServer->connect();
     }
 
+    /**
+     * @param $data
+     */
     public function newUser(array $data):bool{
         return 0;
     }
 
+    /**
+     * @param $data
+     */
     public function validateUser(array $data):bool{
         return 0;
     }

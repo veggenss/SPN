@@ -13,6 +13,9 @@ class GlobalChat{
         $this->mysqli = $mysql->connect();
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getLogs():array{
         $globalLog = $this->mysqli->query("SELECT * FROM global_messages");
         if(!$globalLog){
@@ -21,6 +24,10 @@ class GlobalChat{
         return ["success" => true, "globalLog" => $globalLog->fetch_all(MYSQLI_ASSOC)];
     }
 
+    /**
+     * @return array<string, mixed>
+     * @param $data
+     */
     public function pushMessage(array $data):array{
         $pushStmt = $this->mysqli->prepare("INSERT INTO global_messages (sender_id, message, sender_name, sender_pfp) VALUES (?, ?, ?, ?)");
         if (!$pushStmt) return ["success" => false, "message" => "Prepare failed: " . $this->mysqli->error];

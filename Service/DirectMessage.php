@@ -26,6 +26,9 @@ class DirectMessage{
        return $profile_picture_url;
    }
 
+   /**
+    * @return array<string, mixed>
+    */
    public function getUserId(string $getData):array{
        $reciverUser = $getData;
 
@@ -46,6 +49,9 @@ class DirectMessage{
        return $usernameToUserId;
    }
 
+   /**
+    * @return array<string, mixed>
+    */
    public function createConversation(int $user1_id, int $user2_id):array{
        if ($user1_id > $user2_id) {
            [$user1_id, $user2_id] = [$user2_id, $user1_id];
@@ -75,6 +81,10 @@ class DirectMessage{
    }
 
    //laster inn aktive samtaler slik at de er listet i sidepanelet
+   /**
+    * @return array<string, mixed>
+    * @param $data
+    */
    public function loadConversationDiv(array $data):array{
        if (!isset($data['user_id'])) {
            return $convResponse = ["success" => false, "response" => "user_id er ikke definert"];
@@ -115,6 +125,10 @@ class DirectMessage{
         return $convResponse;
    }
 
+   /**
+    * @return array<string, mixed>
+    * @param $data
+    */
    public function loadConversationLog(array $data):array{
        //laster meldinger fra messages|
        if(!isset($data['user1_id'], $data['user2_id'], $data['conversation_id'])){
@@ -159,6 +173,10 @@ class DirectMessage{
        return $convResponse;
    }
 
+   /**
+    * @return array<string, mixed>
+    * @param $messageData
+    */
    public function pushMessage(array $messageData):array{
        // finner conversation Id hvor userid og recipient id matcher
        $conv_stmt = $this->mysqli->prepare("SELECT id FROM dm_conversations WHERE (user1_id = ? AND user2_id = ?) OR (user2_id = ? AND user1_id = ?)");

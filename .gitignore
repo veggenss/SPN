@@ -7,3 +7,4 @@ mail.env
 composer.phar
 .zed
 js/setupwebsocket.js
+.env
