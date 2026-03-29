@@ -1,8 +1,5 @@
-include/db.inc.php
 vendor/
 uploads/
-WebSocket_error.log
-webSocketLog.syslog
 mail.env
 composer.phar
 .zed
