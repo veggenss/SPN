@@ -55,7 +55,7 @@
         </div>
     </div>
 
-    <!-- Midt delen med chat -->
+    <!-- Tittel -->
     <div class="container">
         <div class="header">
             <h1 class="header">Samtaler på Nett</h1>
@@ -71,6 +71,6 @@
         </div>
     </div>
 </body>
-<script src="js/setupwebsocket.js"></script>
-<script src="js/mainScript.js"></script>
+<script src="<?= BASE_URL ?>/js/setupwebsocket.js"></script>
+<script src="<?= BASE_URL ?>/js/mainScript.js"></script>
 </html>

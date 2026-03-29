@@ -3,7 +3,7 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 require __DIR__ . '/../vendor/autoload.php';
-$config = require __DIR__ . '/config.php';
+// $config = require __DIR__ . '/config.php';
 
 function sendResetPasswordMail($to, $username, $token, $config){
     $mail = new PHPMailer(true);

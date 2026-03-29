@@ -35,6 +35,11 @@ switch($uri){
         (new ChatController())->showChat();
         break;
     
+    case '/send':
+        $data = json_decode(file_get_contents("php://input"), true);
+        (new ChatController())->sendMessage($data);
+        break;
+        
     default:
         http_response_code(404);
         echo "404 Not Found";

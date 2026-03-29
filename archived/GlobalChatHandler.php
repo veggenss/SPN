@@ -2,11 +2,11 @@
 session_start();
 header('Content-Type: application/json');
 
-require '../Service/GlobalChat.php';
+// require '../Service/GlobalChat.php';
 
-use Spn\Service\GlobalChat;
+// use Spn\Service\GlobalChat;
 
-$globalChat = new GlobalChat();
+// $globalChat = new GlobalChat();
 $data = json_decode(file_get_contents("php://input"), true);
 $action = $data['action'] ?? NULL;
 

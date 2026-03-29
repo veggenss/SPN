@@ -2,11 +2,11 @@
 session_start();
 header('Content-Type: application/json');
 
-require '../Service/DirectMessage.php';
+// require '../Service/DirectMessage.php';
 
-use Spn\Service\DirectMessage;
+// use Spn\Service\DirectMessage;
 
-$directMessage = new DirectMessage();
+// $directMessage = new DirectMessage();
 $data = json_decode(file_get_contents("php://input"), true);
 $action = $data['action'] ?? $_GET['action'] ?? NULL;
 

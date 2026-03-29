@@ -4,12 +4,12 @@ function setupWebSocket() {
     );
 
     ws.onopen = () => {
-        console.log("Tilkobling til websocket åpnet :)");
+        console.log("Tilkobling til websocket åpnet");
     };
 
     ws.onclose = () => {
-        console.log("Tilkobling til websocket lukket :(");
-        appendSystemMessage("Tilkoblingen ble lukket. :(");
+        console.log("Tilkobling til websocket lukket");
+        appendSystemMessage("Tilkoblingen ble lukket");
     };
 
     ws.onmessage = (event) => {
