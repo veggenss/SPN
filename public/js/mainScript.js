@@ -47,9 +47,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         globalEnable.addEventListener('click', () => {
+            messagesDiv.innerHTML = '';
             activeChatType = "global";
             recipientId = "all";
-            publicMessages.forEach(pm => appendMessage(pm));
+            pm.public.forEach(pm => appendMessage(pm));
         });
     }
 
@@ -78,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Failed to getChat ', err);
         }
     }
-    
+        
     async function makeConversation(){
         try{
             const user2_username = prompt("Skriv brukernavnet til brukeren du vil lage samtale med");
@@ -146,6 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function renderConversationList(data) {
+        console.log("render", data)
         if (document.getElementById('conversation-' + data.conversation_id)) return;
 
         const wrapper = document.createElement('div');
@@ -160,7 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const recipientUsername = document.createElement('span');
         recipientUsername.classList.add('conversation-name');
-        recipientUsername.textContent = data.user2_username;
+        recipientUsername.textContent = data.user2_name;
 
         const recipientPrevStr = document.createElement('span');
         recipientPrevStr.classList.add('conversation-prevStr');
@@ -168,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const recipientAvatar = document.createElement('img');
         recipientAvatar.classList.add('conversation-avatar');
-        recipientAvatar.src = data.recipient_profile_icon;
+        // recipientAvatar.src = data.recipient_profile_icon;
 
         recipientWrapper.appendChild(recipientAvatar);
         recipientTextWrapper.appendChild(recipientUsername);
@@ -180,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
             messagesDiv.innerHTML = '';
             activeChatType = "direct";
             activeConvId = data.id;
-            pm[data.id].forEach(message => appendMessage(message));
+            pm.private[data.id].forEach(message => appendMessage(message));
         });
 
         dmList.appendChild(wrapper);

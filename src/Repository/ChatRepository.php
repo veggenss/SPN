@@ -39,8 +39,10 @@ class ChatRepository{
     
     public function getConversations(int $id):mixed{
         $stmt = $this->conn->prepare('
-            SELECT c.*, pm.message FROM conversations c 
+            SELECT c.*, pm.message, u.id AS user2_id, u.username AS user2_name FROM conversations c 
             INNER JOIN conversation_members cm ON c.id = cm.conversation_id 
+            INNER JOIN conversation_members cm2 ON c.id = cm2.conversation_id AND cm2.user_id != cm.user_id
+            INNER JOIN users u ON u.id = cm2.user_id
             LEFT JOIN private_messages pm ON pm.id = c.latest_message
             WHERE cm.user_id = ?;');
         $stmt->bind_param("i", $id);
