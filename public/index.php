@@ -9,15 +9,15 @@ use Spn\Controllers\AuthController;
 use Spn\Controllers\ChatController;
 
 $dispatcher = simpleDispatcher(function(RouteCollector $r){
+    //Root
+    $r->addRoute('GET', '/', [AuthController::class, 'showLogin']);
+    
     //Auth
     $r->addRoute('GET', '/login', [AuthController::class, 'showLogin']);
     $r->addRoute('POST', '/login', [AuthController::class, 'login']);
-    
     $r->addRoute('GET', '/register', [AuthController::class, 'showRegister']);
     $r->addRoute('POST', '/register', [AuthController::class, 'register']);
-    
     $r->addRoute('GET', 'password_reset', [AuthController::class, 'showPasswordReset']);
-    
     $r->addRoute('GET', '/logout', [AuthController::class, 'logout']);
     
     //Chat
@@ -25,13 +25,13 @@ $dispatcher = simpleDispatcher(function(RouteCollector $r){
     
     //API
     $r->addRoute('GET', '/api/get-chat', [ChatController::class, 'getChat']);
+    $r->addRoute('POST', '/api/make-conv', [ChatController::class, 'makeConversation']);
     $r->addRoute('POST', '/api/send-message', [ChatController::class, 'sendMessage']);
     
 });
 
 $httpMethod = $_SERVER['REQUEST_METHOD'];
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$uri = str_replace(BASE_URL, '', $uri);
 
 $routeInfo = $dispatcher->dispatch($httpMethod, $uri);
 

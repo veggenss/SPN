@@ -6,7 +6,7 @@
 
 body {
     min-height: 100vh;
-    background-image: url("../assets/background/SamtalerPaaNettBanner.png");
+    background-image: url("/assets/backgrounds/SamtalerPaaNettBanner.png");
     color: #333;
     font-family: "Poppins", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     display: flex;

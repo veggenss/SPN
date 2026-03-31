@@ -8,7 +8,7 @@ const currentUserId = window.currentUserId;
 const currentUsername = window.currentUsername;
 const currentProfilePictureUrl = window.currentProfilePictureUrl;
 
-let privateMessages = [];
+let pm = {}; //Stores all fetched messages
 let activeChatType = "global";
 let activeConvId = null;
 let recipientId = "all";
@@ -43,67 +43,54 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         newDM.addEventListener('click', () => {
-            newConversation();
+            makeConversation();
         });
 
         globalEnable.addEventListener('click', () => {
             activeChatType = "global";
             recipientId = "all";
-            loadGlobalLog();
+            publicMessages.forEach(pm => appendMessage(pm));
         });
     }
 
     async function getChat() {
         try {
+            if(pm.length === 0) return;
+            
             const req = await fetch('/api/get-chat');
             const data = await req.json();
             if(data) console.log("Fetched!", data);
-            data.public.forEach(message => appendMessage(message));
-            if(data.conversations){
-                data.coversations.forEach(conv => {
-                    privateMessages[conv.id] = data.private.filer(pm => pm.conversation_id === conv.id);
+            pm.public = data.public;
+            pm.public.forEach(message => {
+                appendMessage(message)
+            });
+            if(data.conversations.length){
+                data.conversations.forEach(conv => {
+                    if(data.private.length){
+                        pm.private[conv.id] = data.private.filer(pm => pm.conversation_id === conv.id);
+                    }
                     renderConversationList(conv);
                 });
             }
-        } 
+            console.log(pm);
+        }
         catch(err){
             console.error('Failed to getChat ', err);
         }
     }
     
-    async function newConversation(){
+    async function makeConversation(){
         try{
-            const reciverUser = prompt('Skriv in brukernavn til bruker du vil ha samtale med');
-            if (!reciverUser) {
-                return;
-            }
-            if (currentUsername === reciverUser) {
-                alert('Du kan ikke starte samtale med degselv');
-                return;
-            }
+            const user2_username = prompt("Skriv brukernavnet til brukeren du vil lage samtale med");
+            if(!user2_username) return;
             
-            const reciverUserReq = await fetch('/samtalerpanett/Handler/DirectMessageHandler.php?action=getUserId&reciverUser=' + encodeURIComponent(reciverUser));
-            const reciverUserData = await reciverUserReq.json();
-            if(reciverUserData.success === false){
-                alert(reciverUserData.response);
-                console.warn(reciverUserData.response);
-                return;
-            }
-            
-            const createConversationReq = await fetch('/samtalerpanett/Handler/DirectMessageHandler.php', {
+            const req = await fetch('/api/make-conv', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({action: 'createConversation', user1_id: currentUserId, user2_id: reciverUserData.reciverUserId })
+                body: JSON.stringify(user2_username)
             });
-            const createConversationData = await createConversationReq.json();
-            if(createConversationData.success === false){
-                alert(createConversationData.response);
-                console.warn(createConversationData.response);
-                return;
-            }
-            console.log('createConversationData', createConversationData);
-            alert(createConversationData.response);
-            loadConversationDiv();            
+            const data = await req.json();
+            
+            if(data.conversation) console.log("made Conv!", data);
         }
         catch(err){
             console.error('newConversation(); ', err)
@@ -193,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
             messagesDiv.innerHTML = '';
             activeChatType = "direct";
             activeConvId = data.id;
-            privateMessages[data.id].forEach(message => appendMessage(message));
+            pm[data.id].forEach(message => appendMessage(message));
         });
 
         dmList.appendChild(wrapper);

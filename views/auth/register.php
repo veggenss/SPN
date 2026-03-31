@@ -6,11 +6,11 @@ unset($_SESSION['flash']);
 <html lang="en">
 
 <head>
+    <title>Samtaler på nett</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/userRegLog.css">
-    <link rel="icon" href="assets/icons/logo.ico" />
-    <title>Samtaler på nett | Registrer</title>
+    <link rel="icon" href="assets/icons/logo.ico">
 </head>
 
 <body>

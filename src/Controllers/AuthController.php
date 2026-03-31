@@ -34,14 +34,14 @@ class AuthController{
                 "class" => "error",
                 "message" => "Brukernavn eller Passord er feil"
             ];
-            header('Location: ' . BASE_URL . '/login');
+            header('Location: /login');
             exit;
         }
         $_SESSION['user']['id'] = $user['id'];
         $_SESSION['user']['username'] = $user['username'];
         $_SESSION['user']['email'] = $user['email'];
         
-        header('Location: ' . BASE_URL . '/chat');
+        header('Location: /chat');
         exit;
     }
     
@@ -58,7 +58,7 @@ class AuthController{
                 "class" => "error",
                 "message" => "Noe Gikk Galt!"
             ];
-            header('Location: ' . BASE_URL . '/regiser');
+            header('Location: /regiser');
             exit;
         }
 
@@ -66,13 +66,13 @@ class AuthController{
             "class" => "success",
             "message" => "Bruker Registrert!"
         ];
-        header('Location: ' . BASE_URL . '/login');
+        header('Location: /login');
         exit;
     }
     
     public function logout(){
         session_destroy();
-        header('Location: ' . BASE_URL . '/login');
+        header('Location: /login');
         exit;
     }
 }
