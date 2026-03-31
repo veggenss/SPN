@@ -8,81 +8,27 @@ const currentUserId = window.currentUserId;
 const currentUsername = window.currentUsername;
 const currentProfilePictureUrl = window.currentProfilePictureUrl;
 
+let privateMessages = [];
 let activeChatType = "global";
 let activeConvId = null;
 let recipientId = "all";
 let sending = false;
 let ws = null;
 
-console.log(`User Id: ${currentUserId} \nUsername: ${currentUsername} \nProfile Picture URL: ${currentProfilePictureUrl}`); //debug :3
-
-function appendMessage(data) {
-    const wrapper = document.createElement('div');
-    wrapper.classList.add('message');
-
-    const avatar = document.createElement('img');
-    avatar.classList.add('avatar');
-    avatar.src = data.profilePictureUrl || 'default.png';
-
-    const content = document.createElement('div');
-    content.classList.add('message-content');
-
-    const username = document.createElement('span');
-    username.classList.add('username');
-    username.textContent = data.username || 'Ukjent';
-
-    const text = document.createElement('div');
-    text.classList.add('text');
-    text.textContent = data.message;
-
-    if (data.username === "[System]") {
-        text.style.color = "#8B193C";
-        username.style.color = "#8B193C";
-        wrapper.style.backgroundColor = "#FFF1F2";
-    }
-
-    if (data.userId == currentUserId) {
-        wrapper.style.backgroundColor = "#E9E9FF";
-        wrapper.style.flexDirection = "row-reverse";
-        wrapper.style.textAlign = "right";
-        wrapper.style.marginLeft = "auto";
-    }
-
-    if (data.type == "direct" && (data.recipientId == currentUserId || data.userId === currentUserId) && data.message != null) {
-        updatePreviewStr(data.message, data.convId);
-    }
-
-    content.appendChild(username);
-    content.appendChild(text);
-    wrapper.appendChild(avatar);
-    wrapper.appendChild(content);
-
-    messagesDiv.prepend(wrapper);
-}
-
-function appendSystemMessage(message) {
-    appendMessage({
-        username: "[System]",
-        message,
-        profilePictureUrl: "assets/icons/default.png"
-    });
-}
-
-function updatePreviewStr(str, convId) {
-    parent = document.getElementById('conversation-' + convId);
-    child = parent.querySelector(".conversation-prevStr");
-    if (!child) {
-        console.warn("Preview child not found in conv: ", convId);
-        return;
-    }
-    child.textContent = str;
-}
+// function updatePreviewStr(str, convId) {
+//     parent = document.getElementById('conversation-' + convId);
+//     child = parent.querySelector(".conversation-prevStr");
+//     if (!child) {
+//         console.warn("Preview child not found in conv: ", convId);
+//         return;
+//     }
+//     child.textContent = str;
+// }
 
 document.addEventListener('DOMContentLoaded', () => {
     function init() {
-        setupWebSocket();
-        loadGlobalLog();
-        loadConversationDiv();
+        // setupWebSocket();
+        getChat();
         setupEventListeners();
     }
 
@@ -107,50 +53,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    async function loadGlobalLog() {
+    async function getChat() {
         try {
-            const req = await fetch('/samtalerpanett/Handler/GlobalChatHandler.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'getGlobalLogs' })
-            });
+            const req = await fetch('/api/get-chat');
             const data = await req.json();
-
-            messagesDiv.innerHTML = '';
-            console.log("Global message data:", data);
-            data.globalLog.forEach(message => {
-                const standardized = {
-                    userId: message.sender_id,
-                    username: message.sender_name,
-                    profilePictureUrl: message.sender_pfp,
-                    message: message.message
-                };
-                appendMessage(standardized);
-            })
+            if(data) console.log("Fetched!", data);
+            data.public.forEach(message => appendMessage(message));
+            if(data.conversations){
+                data.coversations.forEach(conv => {
+                    privateMessages[conv.id] = data.private.filer(pm => pm.conversation_id === conv.id);
+                    renderConversationList(conv);
+                });
+            }
         } 
         catch(err){
-            console.error('Failed to load globalChatLogs(); ', err);
-        }
-    }
-    
-    async function loadConversationDiv(){
-        try{
-            const req = await fetch('/samtalerpanett/Handler/DirectMessageHandler.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'loadConversationDiv', user_id: currentUserId })
-            });
-            const data = await req.json();
-            
-            console.log("loadConvData:", data);
-            if (data.success === true && Array.isArray(data.conversations)) {
-                data.conversations.forEach(conv => {
-                    renderConversationList(conv);
-                })
-            }
-        }
-        catch(err){
-            console.error('ConversationDiv(); ', err);
+            console.error('Failed to getChat ', err);
         }
     }
     
@@ -193,13 +110,60 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-
-    function renderConversationList(conv) {
-        if (document.getElementById('conversation-' + conv.conversation_id)) return;
+    function appendSystemMessage(message) {
+        appendMessage({
+            username: "[System]",
+            message,
+            profilePictureUrl: "assets/icons/default.png"
+        });
+    }
+    
+    function appendMessage(data) {
+        const wrapper = document.createElement('div');
+        wrapper.classList.add('message');
+    
+        const avatar = document.createElement('img');
+        avatar.classList.add('avatar');
+        avatar.src = data.profilePictureUrl || '/assets/icons/default.png';
+    
+        const content = document.createElement('div');
+        content.classList.add('message-content');
+    
+        const username = document.createElement('span');
+        username.classList.add('username');
+        username.textContent = data.username || 'Ukjent';
+    
+        const text = document.createElement('div');
+        text.classList.add('text');
+        text.textContent = data.message;
+    
+        if (data.username === "[System]") {
+            text.style.color = "#8B193C";
+            username.style.color = "#8B193C";
+            wrapper.style.backgroundColor = "#FFF1F2";
+        }
+    
+        if (data.userId == currentUserId) {
+            wrapper.style.backgroundColor = "#E9E9FF";
+            wrapper.style.flexDirection = "row-reverse";
+            wrapper.style.textAlign = "right";
+            wrapper.style.marginLeft = "auto";
+        }
+    
+        content.appendChild(username);
+        content.appendChild(text);
+        wrapper.appendChild(avatar);
+        wrapper.appendChild(content);
+    
+        messagesDiv.prepend(wrapper);
+    }
+    
+    function renderConversationList(data) {
+        if (document.getElementById('conversation-' + data.conversation_id)) return;
 
         const wrapper = document.createElement('div');
         wrapper.classList.add('conversation');
-        wrapper.id = 'conversation-' + conv.conversation_id;
+        wrapper.id = 'conversation-' + data.id;
 
         const recipientWrapper = document.createElement('div');
         recipientWrapper.classList.add('conversation-user');
@@ -209,15 +173,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const recipientUsername = document.createElement('span');
         recipientUsername.classList.add('conversation-name');
-        recipientUsername.textContent = conv.recipientUsername;
+        recipientUsername.textContent = data.user2_username;
 
         const recipientPrevStr = document.createElement('span');
         recipientPrevStr.classList.add('conversation-prevStr');
-        recipientPrevStr.textContent = conv.prevStr;
+        recipientPrevStr.textContent = data.latest_message;
 
         const recipientAvatar = document.createElement('img');
         recipientAvatar.classList.add('conversation-avatar');
-        recipientAvatar.src = conv.recipient_profile_icon;
+        recipientAvatar.src = data.recipient_profile_icon;
 
         recipientWrapper.appendChild(recipientAvatar);
         recipientTextWrapper.appendChild(recipientUsername);
@@ -226,39 +190,13 @@ document.addEventListener('DOMContentLoaded', () => {
         wrapper.appendChild(recipientWrapper);
 
         wrapper.addEventListener('click', () => {
+            messagesDiv.innerHTML = '';
             activeChatType = "direct";
-            activeConvId = conv.conversation_id;
-            recipientId = conv.recipientId;
-            loadConvLog(conv);
+            activeConvId = data.id;
+            privateMessages[data.id].forEach(message => appendMessage(message));
         });
 
         dmList.appendChild(wrapper);
-    }
-
-    async function loadConvLog(conv){
-        try{
-            const loadLogReq = await fetch('/samtalerpanett/Handler/DirectMessageHandler.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({action: 'loadConversationLog', conversation_id: conv.conversation_id, user2_id: conv.recipientId, user1_id: currentUserId, user1_name: currentUsername, user2_name: conv.recipientUsername})
-            });
-            const loadLogData = await loadLogReq.json();
-            
-            if(loadLogData.success === false){
-                alert(loadLogData.response);
-                console.warn(loadLogData.response);
-                return;
-            }
-            
-            messagesDiv.innerHTML = '';
-            loadLogData.messageData.forEach(message => {
-                appendMessage(message, true);
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            });
-        }
-        catch(err){
-            console.error('loadConversation(); ', err);
-        }
     }
 
     function sendMessage() {

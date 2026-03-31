@@ -4,7 +4,7 @@
 <head>
     <title>Samtaler på nett | Main</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/css/mainStyle.css" />
+    <link rel="stylesheet" href="/css/mainStyle.css" />
     <!--<link rel="icon" href="assets/icons/logo.ico" />-->
 
     <!-- ikoner fra font awesome og google fonts-->
@@ -27,7 +27,7 @@
             <li><a href=""><i class="fa-regular fa-face-smile"></i>Venner</a></li>
         </ul>
         <ul class="nav-prof">
-            <li><a href="/samtalerpanett/pages/profile.php"><?php echo htmlspecialchars($_SESSION['username']); ?><img id="nav-pfp" src="uploads/<?php echo htmlspecialchars($_SESSION['profile_picture']); ?>"</i></a></li>
+            <li><a href="/profile><?php echo htmlspecialchars($_SESSION['user']['username']); ?>"</i></a></li>
         </ul>
     </nav>
 
@@ -71,6 +71,6 @@
         </div>
     </div>
 </body>
-<script src="<?= BASE_URL ?>/js/setupwebsocket.js"></script>
-<script src="<?= BASE_URL ?>/js/mainScript.js"></script>
+<script src="/js/setupwebsocket.js"></script>
+<script src="/js/mainScript.js"></script>
 </html>

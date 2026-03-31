@@ -8,7 +8,7 @@ unset($_SESSION['flash']);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/css/userRegLog.css">
+    <link rel="stylesheet" href="/css/userRegLog.css">
     <link rel="icon" href="assets/icons/logo.ico" />
     <title>Samtaler på nett | Registrer</title>
 </head>
@@ -18,7 +18,7 @@ unset($_SESSION['flash']);
         <h2>Registrering</h2>
         <p>Du må registrere deg for å bruke nettsiden</p>
         <?php if($status) echo "<span class=\"" . $status['class'] . "\">" . $status['message'] . "</span>";?>
-        <form method="post" action="<?= BASE_URL ?>/register" class="register-form">
+        <form method="post" action="/register" class="register-form">
 
             <div class="form-group">
                 <label>Brukernavn:</label>
@@ -42,7 +42,7 @@ unset($_SESSION['flash']);
 
             <button type="submit" id="submit">Registrer deg</button>
 
-            <p>Har du allerede bruker? <a href="<?= BASE_URL ?>/login">Logg inn her</a></p>
+            <p>Har du allerede bruker? <a href="/login">Logg inn her</a></p>
         </form>
     </div>
 </body>

@@ -37,7 +37,10 @@ class AuthController{
             header('Location: ' . BASE_URL . '/login');
             exit;
         }
-        $_SESSION['id'] = $user['id'];
+        $_SESSION['user']['id'] = $user['id'];
+        $_SESSION['user']['username'] = $user['username'];
+        $_SESSION['user']['email'] = $user['email'];
+        
         header('Location: ' . BASE_URL . '/chat');
         exit;
     }

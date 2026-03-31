@@ -34,7 +34,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="/samtalerpanett/assets/icons/logo.ico">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/css/userRegLog.css">
+    <link rel="stylesheet" href="/css/userRegLog.css">
     <title>Samtaler på nett | E-post sendt</title>
 </head>
 <body>
@@ -45,7 +45,7 @@
             <button type="submit"><?php if(isset($error)){echo $error;}else{echo "Send epost på nytt";}?></button>
         </form>
         <br>
-        <a href="../login.php" class="backButton">Trykk her for å logge inn</a>
+        <a href="/login" class="backButton">Trykk her for å logge inn</a>
     </div>
 </body>
 </html>

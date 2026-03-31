@@ -13,12 +13,6 @@
 <body>
     <div class="auth-con">
         <h2><?php echo htmlspecialchars($_SESSION["username"]); ?>'s profil</h2> <!-- det er (username)s profil ikke (username)'s profil!!! vi bruker ikke apostrof for det sånt på norsk!!!!!! - isak -->
-        <?php if (isset($error)): ?>
-            <div class="error"><?php echo "{$error}<br>"; ?></div>
-        <?php elseif(isset($message)): ?>
-            <div class="positive"><?php echo "{$message}<br>"; ?></div>
-        <?php endif; ?>
-
         <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="POST" enctype="multipart/form-data">
             <div class="profile-group">
                 <div class="current-profile">
