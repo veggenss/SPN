@@ -1,8 +1,6 @@
 <?php
 namespace Spn\Repository;
 
-use Exception;
-use mysqli_sql_exception;
 use Spn\Database\Connection;
 
 class ChatRepository{
@@ -13,46 +11,65 @@ class ChatRepository{
     }
     
     public function getPublicMessages():array{
-        $stmt = $this->conn->query('SELECT pm.*, u.username FROM public_messages pm INNER JOIN users u ON pm.user_id = u.id;');
-        $pm = $stmt->fetch_all(MYSQLI_ASSOC);
-        $stmt->free_result();
-        return $pm;
+        try{
+            $stmt = $this->conn->query('SELECT pm.*, u.username FROM public_messages pm INNER JOIN users u ON pm.user_id = u.id;');
+            $pm = $stmt->fetch_all(MYSQLI_ASSOC);
+            $stmt->free_result();
+            return $pm;
+        }
+        catch(\mysqli_sql_exception $e){
+            error_log($e->getMessage());
+            throw new \Spn\Exceptions\DatabaseException("Get Public Messages Failed: " . $e->getMessage(), 0, $e);
+        }
     }
     
     public function getPrivateMessages(int $id):mixed{
-        $stmt = $this->conn->prepare('
-            SELECT pm.id, pm.message, pm.date_sent, u.username AS user1_username, u2.username AS user2_username FROM private_messages pm 
-            INNER JOIN users u ON pm.sender_id = u.id
-            INNER JOIN conversation_members cm ON pm.conversation_id = cm.conversation_id
-            INNER JOIN users u2 ON cm.user_id = u2.id AND u2.id != ?
-            WHERE pm.conversation_id IN (SELECT conversation_id FROM conversation_members WHERE user_id = ?)
-            ORDER BY pm.conversation_id, pm.date_sent ASC;');
-        $stmt->bind_param("ii", $id, $id);
-        $stmt->execute();
-        
-        $res = $stmt->get_result();
-        $pm = $res->fetch_all(MYSQLI_ASSOC);
-        $res->free();
-        $stmt->close();
-        return $pm;
+        try{
+            $stmt = $this->conn->prepare('
+                SELECT pm.id, pm.message, pm.date_sent, u.username AS user1_username, u2.username AS user2_username FROM private_messages pm 
+                INNER JOIN users u ON pm.sender_id = u.id
+                INNER JOIN conversation_members cm ON pm.conversation_id = cm.conversation_id
+                INNER JOIN users u2 ON cm.user_id = u2.id AND u2.id != ?
+                WHERE pm.conversation_id IN (SELECT conversation_id FROM conversation_members WHERE user_id = ?)
+                ORDER BY pm.conversation_id, pm.date_sent ASC;');
+            $stmt->bind_param("ii", $id, $id);
+            $stmt->execute();
+            
+            $res = $stmt->get_result();
+            $pm = $res->fetch_all(MYSQLI_ASSOC);
+            $res->free();
+            $stmt->close();
+            return $pm;
+        }
+        catch(\mysqli_sql_exception $e){
+            error_log($e->getMessage());
+            throw new \Spn\Exceptions\DatabaseException("Get Private Messages Failed: " . $e->getMessage(), 0, $e);
+        }
+
     }
     
     public function getConversations(int $id):mixed{
-        $stmt = $this->conn->prepare('
-            SELECT c.*, pm.message, u.id AS user2_id, u.username AS user2_name FROM conversations c 
-            INNER JOIN conversation_members cm ON c.id = cm.conversation_id 
-            INNER JOIN conversation_members cm2 ON c.id = cm2.conversation_id AND cm2.user_id != cm.user_id
-            INNER JOIN users u ON u.id = cm2.user_id
-            LEFT JOIN private_messages pm ON pm.id = c.latest_message
-            WHERE cm.user_id = ?;');
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
-        
-        $res = $stmt->get_result();
-        $conv = $res->fetch_all(MYSQLI_ASSOC);
-        $res->free();
-        $stmt->close();
-        return $conv;
+        try{
+            $stmt = $this->conn->prepare('
+                SELECT c.*, pm.message, u.id AS user2_id, u.username AS user2_name FROM conversations c 
+                INNER JOIN conversation_members cm ON c.id = cm.conversation_id 
+                INNER JOIN conversation_members cm2 ON c.id = cm2.conversation_id AND cm2.user_id != cm.user_id
+                INNER JOIN users u ON u.id = cm2.user_id
+                LEFT JOIN private_messages pm ON pm.id = c.latest_message
+                WHERE cm.user_id = ?;');
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            
+            $res = $stmt->get_result();
+            $conv = $res->fetch_all(MYSQLI_ASSOC);
+            $res->free();
+            $stmt->close();
+            return $conv;
+        }
+        catch(\mysqli_sql_exception $e){
+            error_log($e->getMessage());
+            throw new \Spn\Exceptions\DatabaseException("Get Conversations Failed: " . $e->getMessage(), 0, $e);
+        }
     }
     
     public function makeConversation(int $user1_id, int $user2_id):int|bool{
@@ -70,10 +87,10 @@ class ChatRepository{
             $stmt->close();
             return $conv_id;
         }
-        catch(mysqli_sql_exception $exception){
+        catch(\mysqli_sql_exception $e){
             $this->conn->rollback();
-            error_log($exception->getMessage());
-            throw $exception;
+            error_log($e->getMessage());
+            throw new \Spn\Exceptions\DatabaseException("makeConversation Failed: " . $e->getMessage(), 0, $e);
         }
     }
     
@@ -101,24 +118,30 @@ class ChatRepository{
         
     }
     
-    //Finds a conversation between 2 users, return true if found, returns false otherwise
+    //finds a conversation between 2 users, return true if found, returns false otherwise
     public function findMutualConv(int $user1_id, int $user2_id):bool{
-        $stmt = $this->conn->prepare('
-            SELECT cm1.conversation_id 
-            FROM conversation_members cm1 
-            JOIN conversation_members cm2 
-            ON cm1.conversation_id = cm2.conversation_id 
-            WHERE cm1.user_id = ? 
-            AND cm2.user_id = ? 
-            LIMIT 1');
-        $stmt->bind_param("ii", $user1_id, $user2_id);
-        $stmt->execute();
-        
-        $res = $stmt->get_result();
-        $exists = $res->num_rows > 0;
-        
-        $res->free();
-        $stmt->close();
-        return $exists;
+        try{
+            $stmt = $this->conn->prepare('
+                SELECT cm1.conversation_id 
+                FROM conversation_members cm1 
+                JOIN conversation_members cm2 
+                ON cm1.conversation_id = cm2.conversation_id 
+                WHERE cm1.user_id = ? 
+                AND cm2.user_id = ? 
+                LIMIT 1');
+            $stmt->bind_param("ii", $user1_id, $user2_id);
+            $stmt->execute();
+            
+            $res = $stmt->get_result();
+            $exists = $res->num_rows > 0;
+            
+            $res->free();
+            $stmt->close();
+            return $exists;
+        }
+        catch(\mysqli_sql_exception $e){
+            error_log($e->getMessage());
+            throw new \Spn\Exceptions\DatabaseException("Find Mutual Conv Failed: " . $e->getMessage(), 0, $e);
+        }
     }
 }

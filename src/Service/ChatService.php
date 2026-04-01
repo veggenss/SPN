@@ -14,28 +14,24 @@ class ChatService{
     }
     
     public function getChat(?int $user_id):array{
-        if($user_id === NULL){
-            return $this->chatRepo->getPublicMessages() ?: [];
-        }
-        
-        return $this->chatRepo->getPrivateMessages($user_id) ?: [];
+        return $user_id === NULL ? $this->chatRepo->getPublicMessages() : $this->chatRepo->getPrivateMessages($user_id);
     }
     
     public function getConversations(int $user_id):array{
-        return $this->chatRepo->getConversations($user_id) ?: [];
+        return $this->chatRepo->getConversations($user_id);
     }
     
     public function makeConversation(int $user1_id, string $user2_name):array|bool{
         $user2_id = $this->userRepo->findByName($user2_name)['id'];
         if(!$user2_id){
-            return false;
+            throw new \Spn\Exceptions\InvalException("Bruker '{$user2_name}' eksisterer ikke.");
         }
         elseif($user2_id === $user1_id){
-            return false;
+            throw new \Spn\Exceptions\InvalException("Kan ikke starte samtale med degselv!");
         }
         
         if($this->chatRepo->findMutualConv($user1_id, $user2_id)){
-            return false;
+            throw new \Spn\Exceptions\InvalException("Samtalen finnes allerede.");
         }
         
         return $this->chatRepo->makeConversation($user1_id, $user2_id) ?: false;

@@ -1,6 +1,8 @@
 <?php
 namespace Spn\Service;
 
+use Dom\Element;
+use Exception;
 use Spn\Repository\UserRepository;
 
 class AuthService{
@@ -12,16 +14,18 @@ class AuthService{
     
     public function login(array $data):bool|array{
         $user = $this->userRepo->findByName($data['username']);
-        if(!$user || !password_verify($data['password'], $user['password'])){
-            return false;
+        if(!$user  || !password_verify($data['password'], $user['password'])){
+            throw new \Spn\Exceptions\InvalException("Feil brukernavn eller passord");
         }
         return $user;
     }
     
     public function register(array $data){
-        if($this->userRepo->findByName($data['username'])){
-            return false;
+        $exists = $this->userRepo->findByName($data['username']);
+        if($exists){
+            throw new \Spn\Exceptions\InvalException("Username already exists");
         }
+        
         $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
         return $this->userRepo->save($data);
     }

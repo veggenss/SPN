@@ -8,7 +8,10 @@
     "autoload": {
         "psr-4": {
             "Spn\\": "src/"
-        }
+        },
+        "classmap": [
+            "src/Exceptions/Exceptions.php"
+        ]
     },
     "license": "MIT",
     "name": "isaveg/samtalerpanett",

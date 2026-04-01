@@ -22,54 +22,96 @@ class AuthController{
         require __DIR__ . '/../../views/auth/password_reset.php';
     }
     
+    
+    //login user
     public function login(){
-        $data = [
-            'username' => $_POST['username'],
-            'password' => $_POST['password']
-        ];
-        
-        $user = $this->auth->login($data);
-        if(!$user){
+        try{
+            $data = [
+                'username' => $_POST['username'],
+                'password' => $_POST['password']
+            ];
+            
+            $user = $this->auth->login($data);
+            $_SESSION['user']['id'] = $user['id'];
+            $_SESSION['user']['username'] = $user['username'];
+            $_SESSION['user']['email'] = $user['email'];
+            
+            header('Location: /chat');
+            exit;
+        }
+        catch(\Spn\Exceptions\InvalException $e){
             $_SESSION['flash'] = [
                 "class" => "error",
-                "message" => "Brukernavn eller Passord er feil"
+                "message" => $e->getMessage()
             ];
             header('Location: /login');
             exit;
         }
-        $_SESSION['user']['id'] = $user['id'];
-        $_SESSION['user']['username'] = $user['username'];
-        $_SESSION['user']['email'] = $user['email'];
-        
-        header('Location: /chat');
-        exit;
-    }
-    
-    public function register(){
-        $data = [
-            'username' => $_POST['username'],
-            'password' => $_POST['password'],
-            'email' => $_POST['email']
-        ];
-        
-        $user = $this->auth->register($data);
-        if(!$user){
+        catch(\Spn\Exceptions\DatabaseException $e){
+            error_log($e->getMessage());
             $_SESSION['flash'] = [
                 "class" => "error",
-                "message" => "Noe Gikk Galt!"
+                "message" => "Noe gikk galt! Vennligst prøv igjen"
             ];
-            header('Location: /regiser');
+            header('Location: /login');
             exit;
         }
-
-        $_SESSION['flash'] = [
-            "class" => "success",
-            "message" => "Bruker Registrert!"
-        ];
-        header('Location: /login');
-        exit;
+        catch(\Exception $e){
+            error_log($e->getMessage());
+            $_SESSION['flash'] = [
+                "class" => "error",
+                "message" => "Ukjent feil!"
+            ];
+        }
     }
     
+    
+    //register user
+    public function register(){
+        try{
+            $data = [
+                'username' => $_POST['username'],
+                'password' => $_POST['password'],
+                'email' => $_POST['email']
+            ];
+            
+            $this->auth->register($data);
+            
+            $_SESSION['flash'] = [
+                "class" => "success",
+                "message" => "Bruker Registrert!"
+            ];
+            header('Location: /login');
+            exit;
+        }
+        catch(\Spn\Exceptions\InvalException $e){
+            $_SESSION['flash'] = [
+                "class" => "error",
+                "message" => $e->getMessage()
+            ];
+            header('Location: /register');
+            exit;
+        }
+        catch(\Spn\Exceptions\DatabaseException $e){
+            error_log($e->getMessage());
+            $_SESSION['flash'] = [
+                "class" => "error",
+                "message" => "Noe gikk galt! Vennligst prøv igjen"
+            ];
+            header('Location: /register');
+            exit;
+        }
+        catch(\Exception $e){
+            error_log($e->getMessage());
+            $_SESSION['flash'] = [
+                "class" => "error",
+                "message" => "Ukjent feil!"
+            ];
+        }
+    }
+    
+    
+    //logout user
     public function logout(){
         session_destroy();
         header('Location: /login');

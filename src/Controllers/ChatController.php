@@ -22,52 +22,107 @@ class ChatController{
         require __DIR__ . '/../../views/chat/main.php';
     }
     
+    
+    //fetch relevant logs
     public function getChat(){  
         $this->authUser();
-        $public = $this->chat->getChat(NULL);
-        $private = $this->chat->getChat($_SESSION['user']['id']);
-        $conversations = $this->chat->getConversations($_SESSION['user']['id']);
-        
-        header('Content-Type: application/json');
-        if(!$public){
-            http_response_code(500);
-            echo json_encode(['error' => 'Failed to fetch chat']);
-            exit;
-        }
-        
-        echo json_encode([
-            'public' => $public,
-            'private' => $private,
-            'conversations' => $conversations
-        ]);
-        exit;
-    }
-    
-    public function makeConversation(){
-        $data = json_decode(file_get_contents('php://input'), true);
-        $res = $this->chat->makeConversation($_SESSION['user']['id'], $data);
-       
-        header('Content-Type: application/json');
-        if(!$res){
+        try{
+            header('Content-Type: application/json');
             echo json_encode([
-                'message' => 'Could Not Create Conversation'
+                'public' => $this->chat->getChat(NULL),
+                'private' => $this->chat->getChat($_SESSION['user']['id']),
+                'conversations' => $this->chat->getConversations($_SESSION['user']['id'])
+            ]);
+            exit; 
+        }
+        catch(\Spn\Exceptions\InvalException $e){
+            echo json_encode([
+                "class" => "error",
+                "message" => $e->getMessage()
             ]);
             exit;
         }
-        
-        echo json_encode([
-            'conversation' => $res
-        ]);
-        exit;
-    }
-    
-    public function sendMessage(){
-        $data = json_decode(file_get_contents('php://input'), true);
-        $res = $this->chat->sendMessage($data);
-        if(!$res){
-            return "sendMessage Failed!";
+        catch(\Spn\Exceptions\DatabaseException $e){
+            error_log($e->getMessage());
+            echo json_encode([
+                "class" => "error",
+                "message" => "Noe gikk galt! Vennligst prøv igjen."
+            ]);
             exit;
         }
-        exit;
+        catch(\Exception $e){
+            error_log($e->getMessage());
+            echo json_encode([
+                "class" => "error",
+                "message" => "Ukjent feil!"
+            ]);
+        }
+    }
+    
+    
+    //create user conversation
+    public function makeConversation(){
+        $data = json_decode(file_get_contents('php://input'), true);
+        try{
+            header('Content-Type: application/json');
+            echo json_encode([
+                'conversation' => $this->chat->makeConversation($_SESSION['user']['id'], $data)
+            ]);
+            exit;
+        }
+        catch(\Spn\Exceptions\InvalException $e){
+            echo json_encode([
+                "class" => "error",
+                "message" => $e->getMessage()
+            ]);
+            exit;
+        }
+        catch(\Spn\Exceptions\DatabaseException $e){
+            error_log($e->getMessage());
+            echo json_encode([
+                "class" => "error",
+                "message" => "Noe gikk galt! Vennligst prøv igjen"
+            ]);
+            exit;
+        }
+        catch(\Exception $e){
+            error_log($e->getMessage());
+            echo json_encode([
+                "class" => "error",
+                "message" => "Ukjent feil!"
+            ]);
+        }
+    }
+    
+    
+    //send user message
+    public function sendMessage(){
+        $data = json_decode(file_get_contents('php://input'), true);
+        try{
+            $this->chat->sendMessage($data);
+            exit;
+        }
+        catch(\Spn\Exceptions\InvalException $e){
+            echo json_encode([
+                "class" => "error",
+                "message" => $e->getMessage()
+            ]);
+            exit;
+        }
+        catch(\Spn\Exceptions\DatabaseException $e){
+            error_log($e->getMessage());
+            echo json_encode([
+                "class" => "error",
+                "message" => "Noe gikk galt! Vennligst prøv igjen"
+            ]);
+            exit;
+        }
+        catch(\Exception $e){
+            error_log($e->getMessage());
+            echo json_encode([
+                "class" => "error",
+                "message" => "Ukjent feil!"
+            ]);
+        }
     }
 }
