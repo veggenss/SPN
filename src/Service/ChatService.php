@@ -13,8 +13,8 @@ class ChatService{
         $this->userRepo = new UserRepository;
     }
     
-    public function getChat(?int $user_id):array{
-        return $user_id === NULL ? $this->chatRepo->getPublicMessages() : $this->chatRepo->getPrivateMessages($user_id);
+    public function getChat():array{
+        return $this->chatRepo->getPublicMessages();
     }
     
     public function getConversations(int $user_id):array{

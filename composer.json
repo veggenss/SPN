@@ -19,16 +19,17 @@
     "type": "project",
     "authors": [
         {
+            "name": "Viggo Weissmüller",
+            "email": "cwffwba@proton.me",
+            "homepage": "https://github.com/veggenss",
+            "role": "Developer"
+        },
+        
+        {
             "name": "Isak Brun Henriksen",
             "email": "isak@brunhenriksen.net",
             "homepage": "https://isak.brunhenriksen.no",
-            "role": "Developer"
-        },
-        {
-            "name": "Viggo Weissmuller",
-            "email": "cwffwba@proton.me",
-            "homepage": "https://veggenss.github.io/MinSide2025/",
-            "role": "Developer"
+            "role": "Contributer"
         }
     ]
 }

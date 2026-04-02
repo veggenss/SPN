@@ -4,31 +4,23 @@ const sendButton = document.getElementById('sendButton');
 const newDM = document.getElementById('newDM');
 const dmList = document.getElementById('DMList');
 const globalEnable = document.getElementById('global-enable');
-const currentUserId = window.currentUserId;
-const currentUsername = window.currentUsername;
-const currentProfilePictureUrl = window.currentProfilePictureUrl;
+const userId = window.currentUser.id;
+const username = window.currentUser.username;
+// const currentProfilePictureUrl = window.currentProfilePictureUrl;
 
-let pm = {}; //Stores all fetched messages
+let userChatLogs = {}; //Stores all fetched messages
 let activeChatType = "global";
 let activeConvId = null;
 let recipientId = "all";
 let sending = false;
 let ws = null;
 
-// function updatePreviewStr(str, convId) {
-//     parent = document.getElementById('conversation-' + convId);
-//     child = parent.querySelector(".conversation-prevStr");
-//     if (!child) {
-//         console.warn("Preview child not found in conv: ", convId);
-//         return;
-//     }
-//     child.textContent = str;
-// }
+console.log(userId, username);
 
 document.addEventListener('DOMContentLoaded', () => {
     function init() {
         // setupWebSocket();
-        getChat();
+        getUserLogs();
         setupEventListeners();
     }
 
@@ -48,32 +40,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
         globalEnable.addEventListener('click', () => {
             messagesDiv.innerHTML = '';
-            activeChatType = "global";
-            recipientId = "all";
-            pm.public.forEach(pm => appendMessage(pm));
+            recipientId = "global";
+            renderUserChatLog(null);
         });
     }
 
-    async function getChat() {
+    async function getUserLogs() {
         try {
-            if(pm.length === 0) return;
-            
-            const req = await fetch('/api/get-chat');
+            const req = await fetch('/api/get-user-logs', {method: 'POST'});
             const data = await req.json();
             if(data) console.log("Fetched!", data);
-            pm.public = data.public;
-            pm.public.forEach(message => {
-                appendMessage(message)
+            userChatLogs.public = data.public;
+            data.public.forEach(message => {
+                appendMessage(message);
             });
-            if(data.conversations.length){
+            if(data.conversations.length > 0){
+                userChatLogs.private = {}
                 data.conversations.forEach(conv => {
-                    if(data.private.length){
-                        pm.private[conv.id] = data.private.filer(pm => pm.conversation_id === conv.id);
-                    }
+                    userChatLogs.private[conv.id] = conv.messages;
                     renderConversationList(conv);
                 });
             }
-            console.log(pm);
+            console.log(userChatLogs);
         }
         catch(err){
             console.error('Failed to getChat ', err);
@@ -91,7 +79,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const data = await req.json();
             
-            if(data.conversation) console.log("made Conv!", data);
+            if(data.conversation){
+                getChat();
+            } 
         }
         catch(err){
             console.error('newConversation(); ', err)
@@ -119,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
         const username = document.createElement('span');
         username.classList.add('username');
-        username.textContent = data.username || 'Ukjent';
+        username.textContent = data.username || data.sender_username || 'Ukjent';
     
         const text = document.createElement('div');
         text.classList.add('text');
@@ -131,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
             wrapper.style.backgroundColor = "#FFF1F2";
         }
     
-        if (data.userId == currentUserId) {
+        if (data.sender_id == userId) {
             wrapper.style.backgroundColor = "#E9E9FF";
             wrapper.style.flexDirection = "row-reverse";
             wrapper.style.textAlign = "right";
@@ -143,51 +133,59 @@ document.addEventListener('DOMContentLoaded', () => {
         wrapper.appendChild(avatar);
         wrapper.appendChild(content);
     
-        messagesDiv.prepend(wrapper);
+        messagesDiv.appendChild(wrapper);
     }
     
     function renderConversationList(data) {
-        console.log("render", data)
-        if (document.getElementById('conversation-' + data.conversation_id)) return;
+        console.log("render", data);
+        if (document.getElementById('conversation-' + data.id)) return;
 
         const wrapper = document.createElement('div');
         wrapper.classList.add('conversation');
         wrapper.id = 'conversation-' + data.id;
 
-        const recipientWrapper = document.createElement('div');
-        recipientWrapper.classList.add('conversation-user');
+        const userWrapper = document.createElement('div');
+        userWrapper.classList.add('conversation-user');
 
-        const recipientTextWrapper = document.createElement('div');
-        recipientTextWrapper.classList.add('conversation-userText');
+        const textWrapper = document.createElement('div');
+        textWrapper.classList.add('conversation-userText');
 
-        const recipientUsername = document.createElement('span');
-        recipientUsername.classList.add('conversation-name');
-        recipientUsername.textContent = data.user2_name;
+        const username = document.createElement('span');
+        username.classList.add('conversation-name');
+        username.textContent = data.participants[0]; //should be data.title
 
-        const recipientPrevStr = document.createElement('span');
-        recipientPrevStr.classList.add('conversation-prevStr');
-        recipientPrevStr.textContent = data.latest_message;
+        const prevStr = document.createElement('span');
+        prevStr.classList.add('conversation-prevStr');
+        prevStr.textContent = data.latest_message;
 
-        const recipientAvatar = document.createElement('img');
-        recipientAvatar.classList.add('conversation-avatar');
-        // recipientAvatar.src = data.recipient_profile_icon;
+        const icon = document.createElement('img');
+        icon.classList.add('conversation-avatar');
+        icon.src = '/assets/icons/default.png'; //should be data.icon
 
-        recipientWrapper.appendChild(recipientAvatar);
-        recipientTextWrapper.appendChild(recipientUsername);
-        recipientTextWrapper.appendChild(recipientPrevStr);
-        recipientWrapper.appendChild(recipientTextWrapper);
-        wrapper.appendChild(recipientWrapper);
+        userWrapper.appendChild(icon);
+        textWrapper.appendChild(username);
+        textWrapper.appendChild(prevStr);
+        userWrapper.appendChild(textWrapper);
+        wrapper.appendChild(userWrapper);
 
         wrapper.addEventListener('click', () => {
-            messagesDiv.innerHTML = '';
+            renderUserChatLog(data.id);
             activeChatType = "direct";
             activeConvId = data.id;
-            pm.private[data.id].forEach(message => appendMessage(message));
         });
 
         dmList.appendChild(wrapper);
     }
-
+    
+    function renderUserChatLog(convId){
+        messagesDiv.innerHTML = '';
+        if(convId === null){
+            userChatLogs.public.forEach(msg => appendMessage(msg));
+            return;
+        }
+        userChatLogs.private[convId].forEach(msg => appendMessage(msg));
+    }
+    
     function sendMessage() {
         console.log("Sendt melding (sendMessage())");
         if (sending) return;
@@ -208,8 +206,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const messageData = {
             recipientId: recipientId,
             type: activeChatType,
-            username: currentUsername,
-            userId: currentUserId,
             message: text,
             profilePictureUrl: currentProfilePictureUrl,
         };

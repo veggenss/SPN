@@ -1,8 +1,6 @@
 <?php
 namespace Spn\Service;
 
-use Dom\Element;
-use Exception;
 use Spn\Repository\UserRepository;
 
 class AuthService{
@@ -14,7 +12,7 @@ class AuthService{
     
     public function login(array $data):bool|array{
         $user = $this->userRepo->findByName($data['username']);
-        if(!$user  || !password_verify($data['password'], $user['password'])){
+        if(!$user || !password_verify($data['password'], $user['password'])){
             throw new \Spn\Exceptions\InvalException("Feil brukernavn eller passord");
         }
         return $user;

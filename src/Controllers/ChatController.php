@@ -24,13 +24,12 @@ class ChatController{
     
     
     //fetch relevant logs
-    public function getChat(){  
+    public function getUserLogs(){  
         $this->authUser();
         try{
             header('Content-Type: application/json');
             echo json_encode([
-                'public' => $this->chat->getChat(NULL),
-                'private' => $this->chat->getChat($_SESSION['user']['id']),
+                'public' => $this->chat->getChat(),
                 'conversations' => $this->chat->getConversations($_SESSION['user']['id'])
             ]);
             exit; 

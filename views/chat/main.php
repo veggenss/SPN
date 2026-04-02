@@ -5,19 +5,10 @@
     <title>Samtaler på nett | Main</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="/css/mainStyle.css" />
-    <!--<link rel="icon" href="assets/icons/logo.ico" />-->
+    <link rel="icon" href="/assets/icons/logo.ico" />
 
     <!-- ikoner fra font awesome og google fonts-->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" />
-
-    <!-- Open Graph meta-tagger -->
-    <meta property="og:title" content="Samtaler på Nett">
-    <meta property="og:description" content="Samtaler på Nett er et sted på nett hvor du kan ha samtaler.">
-    <meta property="og:image" content="https://isak.brunhenriksen.no/Pictures/samtalelogo.png">
-    <meta property="og:url" content="https://isak.brunhenriksen.no/samtalerpanett">
-    <meta property="og:type" content="website">
-    <meta property="og:locale" content="no_NO">
-    <meta property="og:site_name" content="Samtaler På Nett">
 </head>
 
 <body>
@@ -27,7 +18,7 @@
             <li><a href=""><i class="fa-regular fa-face-smile"></i>Venner</a></li>
         </ul>
         <ul class="nav-prof">
-            <li><a href="/profile><?php echo htmlspecialchars($_SESSION['user']['username']); ?>"</i></a></li>
+            <li><a href="/profile"><?php echo htmlspecialchars($_SESSION['user']['username']); ?></i></a></li>
         </ul>
     </nav>
 
@@ -71,6 +62,12 @@
         </div>
     </div>
 </body>
+<script>
+window.currentUser = {
+    id: "<?php echo $_SESSION['user']['id']?>",
+    username: "<?php echo $_SESSION['user']['username']?>"
+}
+</script>
 <script src="/js/setupwebsocket.js"></script>
 <script src="/js/mainScript.js"></script>
 </html>

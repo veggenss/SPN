@@ -23,48 +23,53 @@ class ChatRepository{
         }
     }
     
-    public function getPrivateMessages(int $id):mixed{
+    public function getConversations(int $id):array{
         try{
-            $stmt = $this->conn->prepare('
-                SELECT pm.id, pm.message, pm.date_sent, u.username AS user1_username, u2.username AS user2_username FROM private_messages pm 
-                INNER JOIN users u ON pm.sender_id = u.id
-                INNER JOIN conversation_members cm ON pm.conversation_id = cm.conversation_id
-                INNER JOIN users u2 ON cm.user_id = u2.id AND u2.id != ?
+            $convStmt = $this->conn->prepare('
+                SELECT c.id, c.date_added AS conv_created, c.latest_message, GROUP_CONCAT(DISTINCT u.username) AS participants
+                FROM conversations c
+                JOIN conversation_members cm ON c.id = cm.conversation_id
+                JOIN users u ON cm.user_id = u.id
+                WHERE c.id IN (SELECT conversation_id FROM conversation_members WHERE user_id = ?)
+                GROUP BY c.id ORDER BY c.date_added ASC;
+            ');
+            $convStmt->bind_param("i", $id);
+            $convStmt->execute();
+            $convRes = $convStmt->get_result();
+            
+            $conversations = $convRes->fetch_all(MYSQLI_ASSOC);
+            $convRes->free();
+            $convStmt->close();
+            
+            $msgStmt = $this->conn->prepare('
+                SELECT pm.*, sender.username AS sender_username FROM private_messages pm
+                JOIN users sender ON pm.sender_id = sender.id
                 WHERE pm.conversation_id IN (SELECT conversation_id FROM conversation_members WHERE user_id = ?)
-                ORDER BY pm.conversation_id, pm.date_sent ASC;');
-            $stmt->bind_param("ii", $id, $id);
-            $stmt->execute();
+                ORDER BY pm.conversation_id, pm.date_sent ASC;
+            ');
+            $msgStmt->bind_param("i", $id);
+            $msgStmt->execute();
+            $msgRes = $msgStmt->get_result();
             
-            $res = $stmt->get_result();
-            $pm = $res->fetch_all(MYSQLI_ASSOC);
-            $res->free();
-            $stmt->close();
-            return $pm;
-        }
-        catch(\mysqli_sql_exception $e){
-            error_log($e->getMessage());
-            throw new \Spn\Exceptions\DatabaseException("Get Private Messages Failed: " . $e->getMessage(), 0, $e);
-        }
-
-    }
-    
-    public function getConversations(int $id):mixed{
-        try{
-            $stmt = $this->conn->prepare('
-                SELECT c.*, pm.message, u.id AS user2_id, u.username AS user2_name FROM conversations c 
-                INNER JOIN conversation_members cm ON c.id = cm.conversation_id 
-                INNER JOIN conversation_members cm2 ON c.id = cm2.conversation_id AND cm2.user_id != cm.user_id
-                INNER JOIN users u ON u.id = cm2.user_id
-                LEFT JOIN private_messages pm ON pm.id = c.latest_message
-                WHERE cm.user_id = ?;');
-            $stmt->bind_param("i", $id);
-            $stmt->execute();
+            $messages = $msgRes->fetch_all(MYSQLI_ASSOC);
+            $msgRes->free();
+            $msgStmt->close();
             
-            $res = $stmt->get_result();
-            $conv = $res->fetch_all(MYSQLI_ASSOC);
-            $res->free();
-            $stmt->close();
-            return $conv;
+            $convArr = [];
+            
+            foreach($conversations as $conv){
+                $conv['participants'] = explode(',', $conv['participants']);
+                $conv['messages'] = [];
+                $convArr[$conv['id']] = $conv;
+            }
+            
+            foreach($messages as $msg){
+                if(isset($convArr[$msg['conversation_id']])){
+                    $convArr[$msg['conversation_id']]['messages'][] = $msg;
+                }
+            }
+            
+            return array_values($convArr); //array_values fordi hvis ikke gjør PHP det til en objekt
         }
         catch(\mysqli_sql_exception $e){
             error_log($e->getMessage());

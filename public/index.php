@@ -7,6 +7,7 @@ use function FastRoute\simpleDispatcher;
 
 use Spn\Controllers\AuthController;
 use Spn\Controllers\ChatController;
+use Spn\Controllers\UserController;
 
 $dispatcher = simpleDispatcher(function(RouteCollector $r){
     //Root
@@ -24,7 +25,7 @@ $dispatcher = simpleDispatcher(function(RouteCollector $r){
     $r->addRoute('GET', '/chat', [ChatController::class, 'showChat']);
     
     //API
-    $r->addRoute('GET', '/api/get-chat', [ChatController::class, 'getChat']);
+    $r->addRoute('POST', '/api/get-user-logs', [ChatController::class, 'getUserLogs']);
     $r->addRoute('POST', '/api/make-conv', [ChatController::class, 'makeConversation']);
     $r->addRoute('POST', '/api/send-message', [ChatController::class, 'sendMessage']);
     

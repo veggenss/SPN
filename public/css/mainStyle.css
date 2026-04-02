@@ -249,7 +249,7 @@ button:active {
 
 #messages {
     display: flex;
-    flex-direction: column-reverse;
+    flex-direction: column;
     height: 85vh;
     overflow-y: auto;
     overflow-x: hidden;
@@ -350,9 +350,8 @@ button:active {
 }
 
 .message-content {
-    /*display: flex;
-  flex-direction: column;*/
-    display: inline-block;
+    display: flex;
+    flex-direction: column;
     width: fit-content;
 }
 
