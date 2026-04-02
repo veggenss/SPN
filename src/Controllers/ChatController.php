@@ -10,22 +10,13 @@ class ChatController{
         $this->chat = new ChatService;
     }
     
-    private function authUser(){
-        if(!$_SESSION['user']){
-            header('Location: /login');
-            exit;
-        }
-    }
-    
     public function showChat(){
-        $this->authUser();
         require __DIR__ . '/../../views/chat/main.php';
     }
     
     
     //fetch relevant logs
     public function getUserLogs(){  
-        $this->authUser();
         try{
             header('Content-Type: application/json');
             echo json_encode([

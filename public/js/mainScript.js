@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await req.json();
             
             if(data.conversation){
-                getChat();
+                getUserLogs();
             } 
         }
         catch(err){
