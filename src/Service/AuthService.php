@@ -27,7 +27,7 @@ class AuthService{
         $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
         return $this->userRepo->save($data);
     }
-    
+        
     public function delete(array $data){
         
     }

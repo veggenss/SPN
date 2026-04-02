@@ -10,7 +10,7 @@ class UserController{
         $this->user = new UserService;
     }
     
-    public function showProfile(){
+    public function showProfile(): void{
         require __DIR__ . '/../../views/user/profile.php';
     }
 }

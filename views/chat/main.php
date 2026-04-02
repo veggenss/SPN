@@ -68,6 +68,5 @@ window.currentUser = {
     username: "<?php echo $_SESSION['user']['username']?>"
 }
 </script>
-<script src="/js/setupwebsocket.js"></script>
 <script src="/js/mainScript.js"></script>
 </html>

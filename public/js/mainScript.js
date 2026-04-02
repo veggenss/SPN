@@ -19,7 +19,7 @@ console.log(userId, username);
 
 document.addEventListener('DOMContentLoaded', () => {
     function init() {
-        // setupWebSocket();
+        websocketConn();
         getUserLogs();
         setupEventListeners();
     }
@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
         const text = document.createElement('div');
         text.classList.add('text');
-        text.textContent = data.message;
+        text.textContent = data.message || data[0];
     
         if (data.username === "[System]") {
             text.style.color = "#8B193C";
@@ -223,5 +223,24 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => { sending = false; }, 100);
     }
 
+    function websocketConn() {
+        ws = new WebSocket("ws://127.0.0.1:9501");
+    
+        ws.onopen = () => {
+            console.log("Tilkobling til websocket åpnet");
+        };
+    
+        ws.onclose = () => {
+            console.log("Tilkobling til websocket lukket");
+            appendSystemMessage("Tilkoblingen ble lukket");
+        };
+    
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            console.log(data);
+            appendSystemMessage(data);
+        };
+    }
+    
     init();
 });

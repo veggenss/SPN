@@ -6,7 +6,7 @@ use mysqli;
 class Connection{
     private static ?mysqli $conn = null;
     
-    public static function get():mysqli{
+    public static function get(): mysqli{
         if(!self::$conn){
             \mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
             

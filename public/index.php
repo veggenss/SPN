@@ -17,11 +17,12 @@ $dispatcher = \FastRoute\simpleDispatcher(function(RouteCollector $r){
     $r->addRoute('POST', '/login', [AuthController::class, 'login']);
     $r->addRoute('GET', '/register', [AuthController::class, 'showRegister']);
     $r->addRoute('POST', '/register', [AuthController::class, 'register']);
-    $r->addRoute('GET', '/password_reset', [AuthController::class, 'showPasswordReset']);
     $r->addRoute('GET', '/logout', [AuthController::class, 'logout']);
     
-    //Chat
+    //Page
+    $r->addRoute('GET', '/password_reset', [AuthController::class, 'showPasswordReset']);
     $r->addRoute('GET', '/chat', [ChatController::class, 'showChat']);
+    $r->addRoute('GET', '/profile', [UserController::class, 'showProfile']);
     
     //API
     $r->addRoute('POST', '/api/get-user-logs', [ChatController::class, 'getUserLogs']);

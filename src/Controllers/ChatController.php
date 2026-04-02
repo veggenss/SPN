@@ -16,7 +16,7 @@ class ChatController{
     
     
     //fetch relevant logs
-    public function getUserLogs(){  
+    public function getUserLogs(): void{  
         try{
             header('Content-Type: application/json');
             echo json_encode([
@@ -51,7 +51,7 @@ class ChatController{
     
     
     //create user conversation
-    public function makeConversation(){
+    public function makeConversation(): void{
         $data = json_decode(file_get_contents('php://input'), true);
         try{
             header('Content-Type: application/json');
@@ -86,7 +86,7 @@ class ChatController{
     
     
     //send user message
-    public function sendMessage(){
+    public function sendMessage(): void{
         $data = json_decode(file_get_contents('php://input'), true);
         try{
             $this->chat->sendMessage($data);

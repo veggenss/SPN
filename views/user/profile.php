@@ -12,11 +12,11 @@
 
 <body>
     <div class="auth-con">
-        <h2><?php echo htmlspecialchars($_SESSION["username"]); ?>'s profil</h2> <!-- det er (username)s profil ikke (username)'s profil!!! vi bruker ikke apostrof for det sånt på norsk!!!!!! - isak -->
-        <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="POST" enctype="multipart/form-data">
+        <h2><?php echo htmlspecialchars($_SESSION['user']['username']); ?>'s profil</h2>
+        <form action="/api-updateProfile" method="post">
             <div class="profile-group">
                 <div class="current-profile">
-                    <img src="../uploads/<?php echo htmlspecialchars($_SESSION["profile_picture"]); ?>" alt="Profilbilde">
+                    <img src="../uploads/<?php echo htmlspecialchars($_SESSION['user']['profile_picture']); ?>" alt="Profilbilde">
                 </div>
                 <label for="profile_picture">Velg nytt profilbilde:</label>
                 <input type="file" name="profile_picture" id="profile_picture">
@@ -24,12 +24,12 @@
 
             <div class="profile-group">
                 <label>Brukernavn:</label>
-                <input type="text" placeholder="<?php echo htmlspecialchars($_SESSION['username']); ?>" value="<?php echo htmlspecialchars($_SESSION['username']); ?>" name="username">
+                <input type="text" placeholder="<?php echo htmlspecialchars($_SESSION['user']['username']); ?>" value="<?php echo htmlspecialchars($_SESSION['user']['username']); ?>" name="username">
             </div>
 
             <div class="profile-group">
                 <label>E-post:</label>
-                <input type="email" placeholder="<?php echo htmlspecialchars($_SESSION['email']); ?>" value="<?php echo htmlspecialchars($_SESSION['email']); ?>" name="email">
+                <input type="email" placeholder="<?php echo htmlspecialchars($_SESSION['user']['email']); ?>" value="<?php echo htmlspecialchars($_SESSION['user']['email']); ?>" name="email">
             </div>
 
             <div class="profile-group">
@@ -37,12 +37,12 @@
             </div>
             <button id="submit" type="submit" onclick="return confirm('Hvis du har endret e-post: \nDu blir logget ut og må verifisere e-posten før du logger inn igjen')">Lagre Endringer</button>
             <div class="profile-group">
-                <a href="/logout.php" id="logout">Logg ut</a>
+                <a href="/logout" id="logout">Logg ut</a>
             </div>
         </form>
 
         <p>Antall samtalepoeng: <?php // samtalepoeng går her ?></p>
-        <a id="backButton" href="../main.php">Tilbake til Samtaler På Nett</a>
+        <a id="backButton" href="/chat">Tilbake til Samtaler På Nett</a>
     </div>
 </body>
 

@@ -1,6 +1,7 @@
 <?php
 namespace Spn\Repository;
 
+use Exception;
 use Spn\Database\Connection;
 
 class ChatRepository{
@@ -10,7 +11,7 @@ class ChatRepository{
         $this->conn = Connection::get();
     }
     
-    public function getPublicMessages():array{
+    public function getPublicMessages(): array{
         try{
             $stmt = $this->conn->query('SELECT pm.*, u.username FROM public_messages pm INNER JOIN users u ON pm.user_id = u.id;');
             $pm = $stmt->fetch_all(MYSQLI_ASSOC);
@@ -23,7 +24,7 @@ class ChatRepository{
         }
     }
     
-    public function getConversations(int $id):array{
+    public function getConversations(int $id): array{
         try{
             $convStmt = $this->conn->prepare('
                 SELECT c.id, c.date_added AS conv_created, c.latest_message, GROUP_CONCAT(DISTINCT u.username) AS participants
@@ -77,7 +78,7 @@ class ChatRepository{
         }
     }
     
-    public function makeConversation(int $user1_id, int $user2_id):int|bool{
+    public function makeConversation(int $user1_id, int $user2_id): int{
         $this->conn->begin_transaction();
         try{
             $stmt = $this->conn->prepare('INSERT INTO conversations () VALUES ()');
@@ -124,7 +125,7 @@ class ChatRepository{
     }
     
     //finds a conversation between 2 users, return true if found, returns false otherwise
-    public function findMutualConv(int $user1_id, int $user2_id):bool{
+    public function findMutualConv(int $user1_id, int $user2_id): bool{
         try{
             $stmt = $this->conn->prepare('
                 SELECT cm1.conversation_id 

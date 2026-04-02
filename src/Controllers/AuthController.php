@@ -10,21 +10,21 @@ class AuthController{
         $this->auth = new AuthService;
     }
     
-    public function showRegister(){
+    public function showRegister(): void{
         require __DIR__ . '/../../views/auth/register.php';
     }
     
-    public function showLogin(){
+    public function showLogin(): void{
         require __DIR__ . '/../../views/auth/login.php';
     }
     
-    public function showPasswordReset(){
+    public function showPasswordReset(): void{
         require __DIR__ . '/../../views/auth/password_reset.php';
     }
     
     
     //login user
-    public function login(){
+    public function login(): void{
         try{
             $data = [
                 'username' => $_POST['username'],
@@ -67,7 +67,7 @@ class AuthController{
     
     
     //register user
-    public function register(){
+    public function register(): void{
         try{
             $data = [
                 'username' => $_POST['username'],
@@ -112,7 +112,7 @@ class AuthController{
     
     
     //logout user
-    public function logout(){
+    public function logout(): void{
         session_destroy();
         header('Location: /login');
         exit;
