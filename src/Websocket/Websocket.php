@@ -4,7 +4,6 @@ namespace Spn\WebSocket;
 use OpenSwoole\Websocket\Server;
 use OpenSwoole\Http\Request;
 use OpenSwoole\Websocket\Frame;
-use Spn\Service\ChatService;
 
 $server = new Server("127.0.0.1", 9501);
 

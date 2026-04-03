@@ -1,9 +1,11 @@
 const messagesDiv = document.getElementById('messages');
 const input = document.getElementById('messageInput');
 const sendButton = document.getElementById('sendButton');
-const newDM = document.getElementById('newDM');
-const dmList = document.getElementById('DMList');
+const newConv = document.getElementById('new-conv');
+const convList = document.getElementById('conv-list');
 const globalEnable = document.getElementById('global-enable');
+const sidebar = document.getElementById('sidebar');
+const backdrop = document.getElementById("sidebarBackdrop");
 const userId = window.currentUser.id;
 const username = window.currentUser.username;
 // const currentProfilePictureUrl = window.currentProfilePictureUrl;
@@ -34,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        newDM.addEventListener('click', () => {
+        newConv.addEventListener('click', () => {
             makeConversation();
         });
 
@@ -100,6 +102,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const wrapper = document.createElement('div');
         wrapper.classList.add('message');
     
+        if (data.sender_id == userId) {
+            wrapper.classList.add('self');
+        }
+        
+        if (data.username === "[System]") {
+            wrapper.classList.add('system');
+            wrapper.textContent = data.message || '';
+            messagesDiv.appendChild(wrapper);
+            return;
+        }
+        
         const avatar = document.createElement('img');
         avatar.classList.add('avatar');
         avatar.src = data.profilePictureUrl || '/assets/icons/default.png';
@@ -107,33 +120,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const content = document.createElement('div');
         content.classList.add('message-content');
     
-        const username = document.createElement('span');
-        username.classList.add('username');
-        username.textContent = data.username || data.sender_username || 'Ukjent';
+        const usernameSpan = document.createElement('span');
+        usernameSpan.classList.add('username');
+        usernameSpan.textContent = data.username || data.sender_username || 'Ukjent';
     
-        const text = document.createElement('div');
-        text.classList.add('text');
-        text.textContent = data.message || data[0];
-    
-        if (data.username === "[System]") {
-            text.style.color = "#8B193C";
-            username.style.color = "#8B193C";
-            wrapper.style.backgroundColor = "#FFF1F2";
-        }
-    
-        if (data.sender_id == userId) {
-            wrapper.style.backgroundColor = "#E9E9FF";
-            wrapper.style.flexDirection = "row-reverse";
-            wrapper.style.textAlign = "right";
-            wrapper.style.marginLeft = "auto";
-        }
-    
-        content.appendChild(username);
-        content.appendChild(text);
+        const textDiv = document.createElement('div');
+        textDiv.classList.add('text');
+        textDiv.textContent = data.message || data[0];
+        
+        content.appendChild(usernameSpan);
+        content.appendChild(textDiv);
+
         wrapper.appendChild(avatar);
         wrapper.appendChild(content);
-    
+
         messagesDiv.appendChild(wrapper);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
     
     function renderConversationList(data) {
@@ -174,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
             activeConvId = data.id;
         });
 
-        dmList.appendChild(wrapper);
+        convList.appendChild(wrapper);
     }
     
     function renderUserChatLog(convId){

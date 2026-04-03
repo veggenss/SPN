@@ -1,18 +1,43 @@
+:root {
+    --bg-main: #f8f8ff;
+    --bg-overlay: rgba(255, 255, 255, 0.25);
+    --bg-container: #e0e0ff;
+
+    --primary: #9494ff;
+    --primary-hover: #aeaeff;
+
+    --text-main: #333;
+    --text-muted: #444;
+    --text-username: #1e1e3f;
+
+    --border: #c0c0ff;
+    --shadow-sm: 0 4px 12px rgba(0,0,0,0.05);
+    --shadow-md: 0 8px 32px rgba(0,0,0,0.1);
+
+    --radius: 16px;
+
+    --error-bg: #ffe0e0;
+    --error-text: #990000;
+    --success-bg: #e0ffe0;
+    --success-text: #007700;
+}
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    font-family: "Poppins", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
     min-height: 100vh;
     background-image: url("/assets/backgrounds/SamtalerPaaNettBanner.png");
-    color: #333;
-    font-family: "Poppins", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
     padding: 20px;
+    color: var(--text-main);
+    position: relative;
 }
 
 body::before {
@@ -22,45 +47,41 @@ body::before {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(255, 255, 255, 0.25);
+    background: var(--bg-overlay);
     pointer-events: none;
     z-index: 1;
     backdrop-filter: blur(2px);
 }
 
-/* container for login/register */
+
 .auth-con,
 .mail-con {
-    background-color: #e0e0ff;
-    padding: 40px 30px 40px 30px;
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    background-color: var(--bg-container);
+    padding: 40px 30px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
     width: 100%;
     max-width: 500px;
     text-align: center;
-    border: 1px solid #c0c0ff;
+    border: 1px solid var(--border);
     z-index: 10;
 }
 
 .auth-con h2 {
     font-size: 1.8rem;
     margin-bottom: 12px;
-    color: #1e1e3f;
+    color: var(--text-username);
 }
 
 .auth-con p {
     font-size: 1rem;
-    margin: 20px 0 20px 0;
-    color: #444;
+    margin: 20px 0;
+    color: var(--text-muted);
 }
+
 
 form {
     width: 100%;
-}
-
-#logout {
-    display: block;
-    margin-top: 10px !important;
 }
 
 .form-group,
@@ -69,32 +90,11 @@ form {
     margin-bottom: 20px;
 }
 
-.current-profile {
-    justify-content: center;
-    text-align: center;
-    img {
-        width: 150px;
-        height: 150px;
-        border-radius: 50%;
-        object-fit: cover;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        transition: 0.5s ease;
-    }
-    img:hover {
-        box-shadow: 0 8px 32px rgba(136, 136, 255, 1);
-        transform: translateY(-1px);
-    }
-}
-
 label {
     display: block;
     font-size: 0.95rem;
-    color: #2a2a4f;
+    color: var(--text-username);
     margin-bottom: 6px;
-}
-
-.remember_me {
-    position: absolute;
 }
 
 input[type="text"],
@@ -103,36 +103,30 @@ input[type="email"] {
     width: 100%;
     padding: 10px;
     border-radius: 8px;
-    border: 1px solid #aaaaff;
+    border: 1px solid var(--primary);
     font-size: 1rem;
-    background-color: #f8f8ff;
+    background-color: var(--bg-main);
 }
 
 input[type="file"]::file-selector-button {
-    background-color: #9494ff;
+    background-color: var(--primary);
     color: white;
-    padding: 10px 10px;
+    padding: 10px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    margin-bottom: 0;
     transition: background-color 0.3s ease;
 }
 
 input[type="file"]::file-selector-button:hover {
-    background-color: #aeaeff;
+    background-color: var(--primary-hover);
 }
 
-input[type="text"]:focus,
-input[type="password"]:focus,
-input[type="email"]:focus {
+input:focus {
     outline: none;
-    border: 1px solid #8ac8ff;
+    border: 1px solid var(--primary-hover);
 }
 
-input[type="checkbox"] {
-    margin-right: 8px;
-}
 
 button[type="submit"],
 .submit,
@@ -142,33 +136,21 @@ button[type="submit"],
     padding: 12px;
     border: none;
     border-radius: 8px;
-    background-color: #9494ff;
+    background-color: var(--primary);
     color: white;
     font-size: 1rem;
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
 
-#registerSubmit {
-    margin-top: 0px !important;
-}
-
-#change-picture {
-    width: 70%;
-}
-
-button[type="submit"]:hover,
+button:hover,
 .submit:hover {
-    background-color: #aeaeff;
+    background-color: var(--primary-hover);
 }
 
-button[type="submit"]:focus,
-input[type="file"]::file-selector-button:focus {
-    background-color: #9494ff;
-}
 
 a {
-    color: #9494ff;
+    color: var(--primary);
     text-decoration: none;
 }
 
@@ -177,14 +159,11 @@ a:hover {
     font-weight: bold;
 }
 
-.return{
-    margin-right: 270px;
-}
-/* Error og success meldinger */
+
 .error,
 .mail-err {
-    background-color: #ffe0e0;
-    color: #990000;
+    background-color: var(--error-bg);
+    color: var(--error-text);
     padding: 10px;
     border-radius: 8px;
     margin-bottom: 15px;
@@ -192,17 +171,14 @@ a:hover {
 
 .success,
 .mail-pos {
-    background-color: #e0ffe0;
-    color: #007700;
+    background-color: var(--success-bg);
+    color: var(--success-text);
     padding: 10px;
     border-radius: 8px;
-    margin: 15px 0 15px 0;
+    margin: 15px 0;
 }
 
-.mail-message {
-    z-index: 10;
-}
-
+/* Responsive */
 @media (max-width: 480px) {
     .auth-con,
     .auth-container {
