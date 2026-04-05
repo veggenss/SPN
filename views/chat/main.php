@@ -18,7 +18,7 @@
       <div class="panel-left">
          <h4>General</h4>
          <div class="top-buttons">
-             <button id="global-enable"><i class="fa-regular fa-message"></i> Global</button>
+             <button id="global-chat"><i class="fa-regular fa-message"></i> Global</button>
              <button onclick="window.location.href='/profile';"><i class="fa-regular fa-user"></i> Min Profil</button>
              <button onclick="window.location.href='/friends';"><i class="fa-regular fa-face-smile"></i> Venner</button>
          </div>

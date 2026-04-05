@@ -7,13 +7,15 @@ use Spn\Database\Connection;
 class ChatRepository{
     private $conn;
     
-    public function __construct(){
+    public function __construct()
+    {
         $this->conn = Connection::get();
     }
     
-    public function getPublicMessages(): array{
+    public function getPublicMessages(): array
+    {
         try{
-            $stmt = $this->conn->query('SELECT pm.*, u.username FROM public_messages pm INNER JOIN users u ON pm.user_id = u.id;');
+            $stmt = $this->conn->query('SELECT pm.*, u.username FROM public_messages pm INNER JOIN users u ON pm.sender_id = u.id;');
             $pm = $stmt->fetch_all(MYSQLI_ASSOC);
             $stmt->free_result();
             return $pm;
@@ -24,10 +26,11 @@ class ChatRepository{
         }
     }
     
-    public function getConversations(int $id): array{
+    public function getConversations(int $id): array
+    {
         try{
             $convStmt = $this->conn->prepare('
-                SELECT c.id, c.date_added AS conv_created, c.latest_message, GROUP_CONCAT(DISTINCT u.username) AS participants
+                SELECT c.id, c.date_added AS conv_created, c.latest_message, GROUP_CONCAT(DISTINCT u.username) AS participants, GROUP_CONCAT(DISTINCT u.id) AS participants_id
                 FROM conversations c
                 JOIN conversation_members cm ON c.id = cm.conversation_id
                 JOIN users u ON cm.user_id = u.id
@@ -60,6 +63,9 @@ class ChatRepository{
             
             foreach($conversations as $conv){
                 $conv['participants'] = explode(',', $conv['participants']);
+                $conv['participants_id'] = $conv['participants_id'] 
+                    |> (fn($arr) => explode(',', $arr)) 
+                    |> (fn($arr) => array_map('intval', $arr));
                 $conv['messages'] = [];
                 $convArr[$conv['id']] = $conv;
             }
@@ -70,7 +76,7 @@ class ChatRepository{
                 }
             }
             
-            return array_values($convArr); //array_values fordi hvis ikke gjør PHP det til en objekt
+            return array_values($convArr); //array_values fordi hvis ikke gjør PHP det om til en objekt
         }
         catch(\mysqli_sql_exception $e){
             error_log($e->getMessage());
@@ -78,7 +84,8 @@ class ChatRepository{
         }
     }
     
-    public function makeConversation(int $user1_id, int $user2_id): int{
+    public function makeConversation(int $user1_id, int $user2_id): int
+    {
         $this->conn->begin_transaction();
         try{
             $stmt = $this->conn->prepare('INSERT INTO conversations () VALUES ()');
@@ -89,6 +96,7 @@ class ChatRepository{
             $stmt = $this->conn->prepare('INSERT INTO conversation_members (conversation_id, user_id) VALUES (?, ?), (?, ?)');
             $stmt->bind_param("iiii", $conv_id, $user1_id, $conv_id, $user2_id);
             $stmt->execute();
+            
             $this->conn->commit();
             $stmt->close();
             return $conv_id;
@@ -100,50 +108,85 @@ class ChatRepository{
         }
     }
     
-    public function savePrivateMessage(array $data){
-        return true;
+    public function savePrivateMessage(array $data)
+    {
+        try{
+            $stmt = $this->conn->prepare('INSERT INTO private_messages (conversation_id, sender_id, message) VALUES (?, ?, ?)');
+            $stmt->bind_param("iis", $data['conv_id'], $data['sender_id'], $data['message']);
+            
+            $status = $stmt->execute();
+            $stmt->close();
+            return $status;
+        }
+        catch(\mysqli_sql_exception $e){
+            throw new \Spn\Exceptions\DatabaseException("Private Message Insetion Failed: " . $e->getMessage(), 0, $e);
+        }
     }
     
-    public function savePublicMessage(array $data){
-        return true;
+    public function savePublicMessage(array $data)
+    {
+        try{
+            $stmt = $this->conn->prepare('INSERT INTO public_messages (sender_id, message) VALUES (?, ?)');
+            $stmt->bind_param("is", $data['sender_id'], $data['message']);
+            
+            $status = $stmt->execute();
+            $stmt->close();
+            return $status;
+        }
+        catch(\mysqli_sql_exception $e){
+            throw new \Spn\Exceptions\DatabaseException("Public Message Insetion Failed: " . $e->getMessage(), 0, $e);
+        }
     }
     
-    public function updatePreview(int $id){
+    public function removePrivateMessage(int $id)
+    {
         
     }
     
-    public function removePrivateMessage(int $id){
+    public function removePublicMessage(int $id)
+    {
         
     }
     
-    public function removePublicMessage(int $id){
-        
-    }
-    
-    public function removeConversation(int $id){
+    public function removeConversation(int $id)
+    {
         
     }
     
     //finds a conversation between 2 users, return true if found, returns false otherwise
-    public function findMutualConv(int $user1_id, int $user2_id): bool{
+    public function findMutualConv(array $user_ids)
+    {
         try{
-            $stmt = $this->conn->prepare('
-                SELECT cm1.conversation_id 
-                FROM conversation_members cm1 
-                JOIN conversation_members cm2 
-                ON cm1.conversation_id = cm2.conversation_id 
-                WHERE cm1.user_id = ? 
-                AND cm2.user_id = ? 
-                LIMIT 1');
-            $stmt->bind_param("ii", $user1_id, $user2_id);
+            $user_ids = array_values(array_unique($user_ids));
+            $count = count($user_ids);
+            
+            if($count < 2 || $count > 10){
+                throw new \Spn\Exceptions\InvalException("User count must be between 2 and 10");
+            }
+            
+            $placeholders = implode(',', array_fill(0, $count, '?'));
+            
+            $stmt = $this->conn->prepare("
+                SELECT conversation_id FROM conversation_members
+                GROUP BY conversation_id
+                HAVING COUNT(*) = ? AND SUM(user_id IN ($placeholders)) = ? 
+                LIMIT 1;
+            ");
+            
+            $types = str_repeat('i', $count + 2);
+            $params = array_merge([$count], $user_ids, [$count]);
+            
+            $stmt->bind_param($types, ...$params);
             $stmt->execute();
-            
+                
             $res = $stmt->get_result();
-            $exists = $res->num_rows > 0;
-            
-            $res->free();
             $stmt->close();
-            return $exists;
+            if($row = $res->fetch_assoc()){
+                $res->free();
+                return (int)$row['conversation_id'];
+            }
+            $res->free();
+            return NULL;
         }
         catch(\mysqli_sql_exception $e){
             error_log($e->getMessage());

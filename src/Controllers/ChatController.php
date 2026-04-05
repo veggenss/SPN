@@ -14,11 +14,10 @@ class ChatController{
         require __DIR__ . '/../../views/chat/main.php';
     }
     
-    
     //fetch relevant logs
     public function getUserLogs(): void{  
+        header('Content-Type: application/json');
         try{
-            header('Content-Type: application/json');
             echo json_encode([
                 'public' => $this->chat->getChat(),
                 'conversations' => $this->chat->getConversations($_SESSION['user']['id'])
@@ -52,9 +51,9 @@ class ChatController{
     
     //create user conversation
     public function makeConversation(): void{
+        header('Content-Type: application/json');
         $data = json_decode(file_get_contents('php://input'), true);
         try{
-            header('Content-Type: application/json');
             echo json_encode([
                 'conversation' => $this->chat->makeConversation($_SESSION['user']['id'], $data)
             ]);

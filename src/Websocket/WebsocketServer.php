@@ -22,30 +22,36 @@ class WebsocketServer
         
         $this->server->on('Open', function(Server $server, Request $request) use ($connections)
         {
-            $userId = (int)($request->get['userId'] ?? 0);
+            $userId = (int)$connections->newConn();
             $connections->add($request->fd, $userId);
+            print_r($connections->allFds());
         });
         
-        $this->server->on('Message', function(Server $server, Frame $frame) use ($chatService, $connections){
-           $data = json_decode($frame->data, true);
-           
-           if(!$data){
-               return;
-           }
-           
-           $action = $chatService->sendMessage($data);
-
-            if($action['recipient']){
+        $this->server->on('message', function(Server $server, Frame $frame) use ($chatService, $connections)
+        {
+            $data = json_decode($frame->data, true);
+            print_r($data);
+            if(!$data){
                 return;
             }
             
-            foreach($connections->allFds() as $fd){
-                $server->push($fd, json_encode($action['data']));
+            $action = $chatService->sendMessage($data);
+            
+            if(count($action['participants_id']) > 1){
+                foreach($connections->findFdsByUsers($action['participants_id']) as $fd){
+                    $server->push((string)$fd, json_encode($action['data']));
+                } 
+            }
+            else{
+                foreach($connections->allFds() as $fd){
+                    $server->push((string)$fd, json_encode($action['data']));
+                }             
             }
         });
         
-        $this->server->on('Close', function(Server $server, int $fd) use ($connections){
-           $connections->remove($fd); 
+        $this->server->on('Close', function(string $fd) use ($connections)
+        {
+           $connections->remove((string)$fd); 
         });
     }
     

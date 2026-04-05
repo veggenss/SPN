@@ -10,5 +10,7 @@ class UserService{
         $this->repo = new UserRepository;
     }
     
-    
+    public function getUserSession(){
+        return $_SESSION['user'];
+    }
 }

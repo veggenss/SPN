@@ -16,7 +16,7 @@
         <form action="/api-updateProfile" method="post">
             <div class="profile-group">
                 <div class="current-profile">
-                    <img src="../uploads/<?php echo htmlspecialchars($_SESSION['user']['profile_picture']); ?>" alt="Profilbilde">
+                    <!--<img src="../uploads/<?php echo htmlspecialchars($_SESSION['user']['profile_picture']); ?>" alt="Profilbilde">-->
                 </div>
                 <label for="profile_picture">Velg nytt profilbilde:</label>
                 <input type="file" name="profile_picture" id="profile_picture">

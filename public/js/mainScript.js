@@ -3,17 +3,17 @@ const input = document.getElementById('messageInput');
 const sendButton = document.getElementById('sendButton');
 const newConv = document.getElementById('new-conv');
 const convList = document.getElementById('conv-list');
-const globalEnable = document.getElementById('global-enable');
+const globalChat = document.getElementById('global-chat');
 const sidebar = document.getElementById('sidebar');
 const backdrop = document.getElementById("sidebarBackdrop");
 const userId = window.currentUser.id;
 const username = window.currentUser.username;
 // const currentProfilePictureUrl = window.currentProfilePictureUrl;
 
+let participants_id = [];
 let userChatLogs = {}; //Stores all fetched messages
-let activeChatType = "global";
 let activeConvId = null;
-let recipientId = "all";
+// let recipientId = "all";
 let sending = false;
 let ws = null;
 
@@ -40,10 +40,9 @@ document.addEventListener('DOMContentLoaded', () => {
             makeConversation();
         });
 
-        globalEnable.addEventListener('click', () => {
+        globalChat.addEventListener('click', () => {
             messagesDiv.innerHTML = '';
-            recipientId = "global";
-            renderUserChatLog(null);
+            renderUserChatLog();
         });
     }
 
@@ -52,10 +51,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const req = await fetch('/api/get-user-logs', {method: 'POST'});
             const data = await req.json();
             if(data) console.log("Fetched!", data);
+            
             userChatLogs.public = data.public;
-            data.public.forEach(message => {
-                appendMessage(message);
-            });
+            renderUserChatLog();
+            
             if(data.conversations.length > 0){
                 userChatLogs.private = {}
                 data.conversations.forEach(conv => {
@@ -88,14 +87,6 @@ document.addEventListener('DOMContentLoaded', () => {
         catch(err){
             console.error('newConversation(); ', err)
         }
-    }
-    
-    function appendSystemMessage(message) {
-        appendMessage({
-            username: "[System]",
-            message,
-            profilePictureUrl: "assets/icons/default.png"
-        });
     }
     
     function appendMessage(data) {
@@ -171,20 +162,21 @@ document.addEventListener('DOMContentLoaded', () => {
         wrapper.appendChild(userWrapper);
 
         wrapper.addEventListener('click', () => {
-            renderUserChatLog(data.id);
-            activeChatType = "direct";
+            renderUserChatLog(data.id, data.participants_id);
             activeConvId = data.id;
         });
 
         convList.appendChild(wrapper);
     }
     
-    function renderUserChatLog(convId){
+    function renderUserChatLog(convId, parties){
         messagesDiv.innerHTML = '';
-        if(convId === null){
+        if(!(convId || parties)){
+            participants_id = [];
             userChatLogs.public.forEach(msg => appendMessage(msg));
             return;
         }
+        participants_id = parties;
         userChatLogs.private[convId].forEach(msg => appendMessage(msg));
     }
     
@@ -201,28 +193,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (text.length > 400) {
             sending = false;
-            appendSystemMessage("Meldingen er for lang. Maks 400 tegn.");
+            appendMessage({
+                username: "[System]",
+                message: "Meldingen er for lang. Maks 400 tegn."
+            });
             return;
         }
 
         const messageData = {
-            recipientId: recipientId,
-            type: activeChatType,
+            username: username,
+            sender_id: userId,
+            participants_id: participants_id,
             message: text,
-            profilePictureUrl: currentProfilePictureUrl,
-        };
-
-        // console.log(messageData);
+            // profilePictureUrl: currentProfilePictureUrl,
+        }
 
         if (ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify(messageData));
         }
         else {
-            appendSystemMessage("WebSocket er frakoblet.");
+            appendMessage({ 
+                    username: "[System]",
+                    message: "Noe Gikk Galt!"
+                });
         }
 
         input.value = '';
-        setTimeout(() => { sending = false; }, 100);
+        setTimeout(() => { sending = false; }, 1000);
     }
 
     function websocketConn() {
@@ -230,18 +227,21 @@ document.addEventListener('DOMContentLoaded', () => {
     
         ws.onopen = () => {
             console.log("Tilkobling til websocket åpnet");
-        };
+        }
     
         ws.onclose = () => {
             console.log("Tilkobling til websocket lukket");
-            appendSystemMessage("Tilkoblingen ble lukket");
-        };
+            appendMessage({ 
+                    username: "[System]",
+                    message: "Tilkoblingen ble lukket"
+                });
+        }
     
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
             console.log(data);
-            appendSystemMessage(data);
-        };
+            appendMessage(data);
+        }
     }
     
     init();
