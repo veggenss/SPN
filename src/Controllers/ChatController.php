@@ -11,7 +11,17 @@ class ChatController{
     }
     
     public function showChat(){
-        require __DIR__ . '/../../views/chat/main.php';
+        try{
+            $_SESSION['user']['wsToken'] = $this->chat->createWsToken($_SESSION['user']['id']);
+            require __DIR__ . '/../../views/chat/main.php';
+        }
+        catch(\Spn\Exceptions\InvalException $e){
+            echo json_encode([
+                "class" => "error",
+                "message" => "Failed to create WS token!"
+            ]);
+            exit;
+        }
     }
     
     //fetch relevant logs

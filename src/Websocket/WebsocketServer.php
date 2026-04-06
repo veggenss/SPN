@@ -22,9 +22,16 @@ class WebsocketServer
         
         $this->server->on('Open', function(Server $server, Request $request) use ($connections)
         {
-            $userId = (int)$connections->newConn();
+            $token = $request->get['token'] ?? null;
+            $userId = ((new \Spn\Service\UserService)->getUserFromToken((string)$token));
+            
+            if (!$userId) {
+                $server->disconnect($request->fd, 1008, "Invalid token");
+                return;
+            }
+            
             $connections->add($request->fd, $userId);
-            print_r($connections->allFds());
+            print "New Connection! \nToken => $token \nfd => $request->fd \nuserID => $userId \n";
         });
         
         $this->server->on('message', function(Server $server, Frame $frame) use ($chatService, $connections)
@@ -35,24 +42,29 @@ class WebsocketServer
                 return;
             }
             
-            $action = $chatService->sendMessage($data);
+            $msg = $chatService->sendMessage($data);
             
-            if(count($action['participants_id']) > 1){
-                foreach($connections->findFdsByUsers($action['participants_id']) as $fd){
-                    $server->push((string)$fd, json_encode($action['data']));
+            $connections->pruneDeadFds($server);
+            
+            if(!empty($msg['participants_id']) && count($msg['participants_id']) > 1){
+                foreach($connections->findFdsByUsers($msg['participants_id']) as $fd){
+                    if($server->isEstablished($fd)){
+                        $server->push($fd, json_encode($msg));
+                    }
                 } 
             }
             else{
                 foreach($connections->allFds() as $fd){
-                    $server->push((string)$fd, json_encode($action['data']));
+                    if($server->isEstablished($fd)){
+                        $server->push($fd, json_encode($msg));
+                    }
                 }             
             }
         });
         
-        $this->server->on('Close', function(string $fd) use ($connections)
-        {
-           $connections->remove((string)$fd); 
-        });
+        $this->server->on('Close', fn($server, $fd) => $connections->remove($fd));
+        
+        $this->server->on('Disconnect', fn($server, $fd) => $connections->remove($fd));
     }
     
     public function start(): void

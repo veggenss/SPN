@@ -6,11 +6,13 @@ use Spn\Database\Connection;
 class UserRepository{
     private $conn;
     
-    public function __construct(){
+    public function __construct()
+    {
         $this->conn = Connection::get();
     }
     
-    public function findById(int $id):mixed{
+    public function findById(int $id): mixed
+    {
         $stmt = $this->conn->prepare('SELECT * FROM users WHERE id = ? AND deleted = 0');
         $stmt->bind_param("i", $id);
         $stmt->execute();
@@ -22,7 +24,8 @@ class UserRepository{
         return $user;
     }
     
-    public function findByName(string $username):mixed{
+    public function findByName(string $username): mixed
+    {
         try{
             $stmt = $this->conn->prepare('SELECT * FROM users WHERE username = ? AND deleted = 0');
             $stmt->bind_param("s", $username);
@@ -39,7 +42,42 @@ class UserRepository{
         }
     }
     
-    public function save(array $data):bool{
+    public function findByToken(string $token)
+    {
+        try{
+            $stmt = $this->conn->prepare('SELECT * FROM user_tokens WHERE token = ?');
+            $stmt->bind_param("s", $token);
+            $stmt->execute();
+            
+            $res = $stmt->get_result();
+            $user = $res->fetch_assoc();
+
+            $res->free();
+            $stmt->close();
+            return $user;
+        }
+        catch(\mysqli_sql_exception $e){
+            throw new \Spn\Exceptions\DatabaseException("Failed to findByToken: " . $e->getMessage(), 0, $e);
+        }
+    }
+    
+    public function saveToken(string $token, int $userId, int $expire_at): bool
+    {
+        try{
+            $stmt = $this->conn->prepare("INSERT INTO user_tokens (token, user_id, expires_at) VALUES (?, ?, ?)");
+            $stmt->bind_param("sii", $token, $userId, $expire_at);
+            
+            $res = $stmt->execute();
+            $stmt->close();
+            return $res;
+        }
+        catch(\mysqli_sql_exception $e){
+            throw new \Spn\Exceptions\DatabaseException("Failed to saveToken: " . $e->getMessage(), 0, $e);
+        }
+    }
+    
+    public function save(array $data): bool
+    {
         try{
             $stmt = $this->conn->prepare('INSERT INTO users (username, password, email) VALUES (?, ?, ?);');
             $stmt->bind_param("sss", $data['username'], $data['password'], $data['email']);
@@ -53,12 +91,45 @@ class UserRepository{
         }
     }
     
-    public function remove(int $id):bool{
-        $stmt = $this->conn->prepare('UPDATE users SET deleted = true WHERE id = ?');
-        $stmt->bind_param("i", $id);
-        
-        $user = $stmt->execute();
-        $stmt->close();
-        return $user;
+    public function removeToken(int $userId): void
+    {
+        try{
+           $stmt = $this->conn->prepare('DELETE FROM user_tokens WHERE user_id = ?');
+           $stmt->bind_param("i", $userId);
+           
+           $stmt->execute();
+           $stmt->close();
+        }
+        catch(\mysqli_sql_exception $e){
+            throw new \Spn\Exceptions\DatabaseException("Failed to findTokenById: " . $e->getMessage(), 0, $e);
+        }
+    }
+    
+    public function removeExpiredToken(): void
+    {
+        try{
+            //run only 10% of the time to avoid overhead
+            if(random_int(1, 10) === 1){
+                $this->conn->execute_query("DELETE FROM user_tokens WHERE expires_at < NOW()");
+            }
+        }
+        catch(\mysqli_sql_exception $e){
+            throw new \Spn\Exceptions\DatabaseException("Failed to remove expired tokens: " . $e->getMessage(), 0, $e);
+        }
+    }
+    
+    public function remove(int $id): bool
+    {
+        try {
+            $stmt = $this->conn->prepare('UPDATE users SET deleted = true WHERE id = ?');
+            $stmt->bind_param("i", $id);
+            
+            $user = $stmt->execute();
+            $stmt->close();
+            return $user;
+        }
+        catch(\mysqli_sql_exception $e){
+           throw new \Spn\Exceptions\DatabaseException("Failed to remove user: " . $e->getMessage(), 0, $e); 
+        }
     }
 }

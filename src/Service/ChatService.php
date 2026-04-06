@@ -14,6 +14,18 @@ class ChatService{
         $this->userRepo = new UserRepository;
     }
     
+    public function createWsToken($user_id): string
+    {
+        $this->userRepo->removeToken($user_id);
+        
+        $token = bin2hex(random_bytes(32));
+        $expireAt = time() + 1200;
+        if(!$this->userRepo->saveToken($token, $user_id, $expireAt)){
+            throw new \Spn\Exceptions\InvalException("Couldn't save User Token");
+        }
+        return $token;
+    }
+    
     public function getChat(): array
     {
         return $this->chatRepo->getPublicMessages();
@@ -44,10 +56,11 @@ class ChatService{
     
     public function sendMessage(array $data): array
     {
-        if(count($data['participants_id']) <= 1 || NULL){
+        if(empty($data['participants_id']) || count($data['participants_id']) <= 1){
             if(!$this->chatRepo->savePublicMessage($data)){
                 throw new \Spn\Exceptions\ChatException("Kunne ikke dytte melding!");
             }
+            $data['conv_id'] = NULL; //for nomalizing returning JSON
             return $data;
         }
         

@@ -10,7 +10,17 @@ class UserService{
         $this->repo = new UserRepository;
     }
     
-    public function getUserSession(){
-        return $_SESSION['user'];
+    public function getUserFromToken(string $token){
+        $user = $this->repo->findByToken($token);
+        if(!$user){
+            throw new \Spn\Exceptions\UserException("Couldn't Find User By Token");
+        }
+        
+        if((int)$user['expires_at'] < time()){
+            $this->repo->removeExpiredToken();
+            return null;
+        }
+        
+        return (int)$user['user_id'];
     }
 }

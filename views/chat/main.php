@@ -49,8 +49,10 @@
 <script>
 window.currentUser = {
     id: "<?php echo $_SESSION['user']['id']?>",
-    username: "<?php echo $_SESSION['user']['username']?>"
+    username: "<?php echo $_SESSION['user']['username']?>",
+    wsToken: "<?php echo $_SESSION['user']['wsToken']?>"
 }
 </script>
+<script src="/js/wsInit.js"></script>
 <script src="/js/mainScript.js"></script>
 </html>

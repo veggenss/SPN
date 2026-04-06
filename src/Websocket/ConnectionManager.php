@@ -14,52 +14,49 @@ class ConnectionManager
         $this->table->column('user_id', Table::TYPE_INT);
         $this->table->create();
     }
- 
-    public function newConn()
+    
+    public function add(int $fd, int $userId): void
     {
-        $user = ((new \Spn\Service\UserService)->getUserSession());
-        return $user['id'];
+        $this->table->set($fd, array('user_id' => $userId));
+    }
+    
+    public function remove(int $fd): void
+    {
+        $this->table->del($fd);
+    }
+    
+    public function getUserId(int $fd): ?int
+    {
+        $row = $this->table->get($fd);
+        return $row['user_id'] ?? null;
     }
     
     public function allFds(): array
     {
         $fds = [];
-        foreach($this->table as $key => $_){
-            $fds[] = (int)$key;
+        foreach ($this->table as $fd => $row) {
+            $fds[] = $fd;
         }
-        
         return $fds;
     }
     
-    public function findFdsByUsers(array $userId): array
+    public function findFdsByUsers(array $userIds): array
     {   
         $fds = [];
-        if(count($userId) === 1){
-            foreach($this->table as $row){
-                if($row['user_id'] === $userId){
-                    $fds = $row['fd'];
-                }
-            } 
-            return $fds;
-        }
-        
-        foreach($userId as $id){
-            foreach($this->table as $row){
-                if($row['user_id'] === $id){
-                    $fds[] = $row['fd'];
-                }
+        foreach($this->table as $fd => $row){
+            if(in_array($row['user_id'], $userIds, true)){
+                $fds[] = $fd;
             }
-        }
+        } 
         return $fds;
     }
     
-    public function add(string $fd, int $userId)
-    {
-        $this->table->set((string)$fd, array('user_id' => $userId));
-    }
-    
-    public function remove(string $fd)
-    {
-        $this->table->del((string)$fd);
-    }
+    public function pruneDeadFds($server): void
+       {
+           foreach ($this->table as $fd => $row) {
+               if (!$server->isEstablished($fd)) {
+                   $this->remove($fd);
+               }
+           }
+       }
 }

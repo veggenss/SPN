@@ -6,14 +6,15 @@ const convList = document.getElementById('conv-list');
 const globalChat = document.getElementById('global-chat');
 const sidebar = document.getElementById('sidebar');
 const backdrop = document.getElementById("sidebarBackdrop");
+
 const userId = window.currentUser.id;
 const username = window.currentUser.username;
+const wsToken = window.currentUser.wsToken;
 // const currentProfilePictureUrl = window.currentProfilePictureUrl;
 
 let participants_id = [];
 let userChatLogs = {}; //Stores all fetched messages
 let activeConvId = null;
-// let recipientId = "all";
 let sending = false;
 let ws = null;
 
@@ -41,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         globalChat.addEventListener('click', () => {
+            activeConvId = null;
             messagesDiv.innerHTML = '';
             renderUserChatLog();
         });
@@ -180,6 +182,15 @@ document.addEventListener('DOMContentLoaded', () => {
         userChatLogs.private[convId].forEach(msg => appendMessage(msg));
     }
     
+    function checkParticipants(a, b){
+        if(a.length !== b.length) return false;
+        
+        const sortA = [...a].sort();
+        const sortB = [...b].sort();
+        
+        return sortA.every((val, i) => val === sortB[i]);
+    }
+    
     function sendMessage() {
         console.log("Sendt melding (sendMessage())");
         if (sending) return;
@@ -221,10 +232,10 @@ document.addEventListener('DOMContentLoaded', () => {
         input.value = '';
         setTimeout(() => { sending = false; }, 1000);
     }
-
-    function websocketConn() {
-        ws = new WebSocket("ws://127.0.0.1:9501");
     
+    function websocketConn() {
+        ws = new WebSocket(`ws://127.0.0.1:9501?token=${wsToken}`);
+        console.log("token: ", wsToken);
         ws.onopen = () => {
             console.log("Tilkobling til websocket åpnet");
         }
@@ -239,8 +250,30 @@ document.addEventListener('DOMContentLoaded', () => {
     
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            console.log(data);
-            appendMessage(data);
+            console.log("Incoming:", data);
+        
+            const isGlobalMsg = data.participants_id.length === 0;
+
+            if (isGlobalMsg) {
+                if (!userChatLogs.public) userChatLogs.public = [];
+                userChatLogs.public.push(data);
+            } 
+            else {
+                if (!userChatLogs.private){
+                    userChatLogs.private = {};
+                }
+                
+                if (!userChatLogs.private[data.conv_id]) {
+                    userChatLogs.private[data.conv_id] = [];
+                }
+        
+                userChatLogs.private[data.conv_id].push(data);
+            }
+            
+            if (data.conv_id === activeConvId) {
+                appendMessage(data);
+                return;
+            }
         }
     }
     

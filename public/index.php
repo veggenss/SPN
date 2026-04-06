@@ -17,7 +17,7 @@ $dispatcher = \FastRoute\simpleDispatcher(function(RouteCollector $r){
     $r->addRoute('POST', '/login', [AuthController::class, 'login']);
     $r->addRoute('GET', '/register', [AuthController::class, 'showRegister']);
     $r->addRoute('POST', '/register', [AuthController::class, 'register']);
-    $r->addRoute('GET', '/logout', [AuthController::class, 'logout']);
+    $r->addRoute('GET', '/logout', [UserController::class, 'logout']);
     
     //Page
     $r->addRoute('GET', '/password_reset', [AuthController::class, 'showPasswordReset']);
