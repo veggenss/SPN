@@ -1,11 +1,17 @@
 const messagesDiv = document.getElementById('messages');
 const input = document.getElementById('messageInput');
 const sendButton = document.getElementById('sendButton');
-const newConv = document.getElementById('new-conv');
+
+const newConvBtn = document.getElementById('new-conv');
+const newConvOverlay = document.getElementById("newConvOverlay");
+const newConvPartyInput = document.getElementById('newConvParticipants');
+const newConvPartyAdd = document.getElementById('addParticipantBtn');
+const newConvForm = document.getElementById('newConvForm');
+
+const closeOverlayBtn = document.getElementById("closeOverlay");
+
 const convList = document.getElementById('conv-list');
 const globalChat = document.getElementById('global-chat');
-const sidebar = document.getElementById('sidebar');
-const backdrop = document.getElementById("sidebarBackdrop");
 
 const userId = window.currentUser.id;
 const username = window.currentUser.username;
@@ -13,6 +19,7 @@ const wsToken = window.currentUser.wsToken;
 // const currentProfilePictureUrl = window.currentProfilePictureUrl;
 
 let participants_id = [];
+let convParticipantsCount = 0;
 let userChatLogs = {}; //Stores all fetched messages
 let activeConvId = null;
 let sending = false;
@@ -36,15 +43,56 @@ document.addEventListener('DOMContentLoaded', () => {
                 sendMessage();
             }
         });
-
-        newConv.addEventListener('click', () => {
-            makeConversation();
-        });
-
+        
         globalChat.addEventListener('click', () => {
             activeConvId = null;
             messagesDiv.innerHTML = '';
             renderUserChatLog();
+        });
+        
+        newConvBtn.addEventListener('click', openNewConvModal);
+        
+        closeOverlayBtn.addEventListener('click', closeNewConvModal);
+        
+        newConvPartyAdd.addEventListener('click', () => {
+            if (convParticipantsCount >= 10) return;
+            
+            const wrapper = document.createElement("div");
+            wrapper.classList.add("participant");
+        
+            wrapper.innerHTML = `
+                <input type="text" placeholder="Brukernavn" required>
+                <button type="button" class="remove">✕</button>
+            `;
+        
+            wrapper.querySelector(".remove").onclick = () => {
+                wrapper.remove();
+                convParticipantsCount--;
+            };
+        
+            newConvPartyInput.appendChild(wrapper);
+            convParticipantsCount++;
+        });
+        
+        newConvForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const convName = document.getElementById('convName').value;
+            
+            const participants = [...newConvPartyInput.querySelectorAll('input')].map(input => input.value.trim()).filter(Boolean);
+            
+            if(participants.length < 1) return;
+            
+            makeConversation({
+                name: convName,
+                participants: participants
+            });
+            
+            form.reset();
+            newConvPartyInput.innerHTML = "";
+            count = 0;
+            
+            closeNewConvModal();
         });
     }
 
@@ -71,14 +119,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
         
-    async function makeConversation(){
+    async function makeConversation(data){
         try{
-            const user2_username = prompt("Skriv brukernavnet til brukeren du vil lage samtale med");
-            if(!user2_username) return;
-            
             const req = await fetch('/api/make-conv', {
                 method: 'POST',
-                body: JSON.stringify(user2_username)
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(data)
             });
             const data = await req.json();
             
@@ -182,15 +228,6 @@ document.addEventListener('DOMContentLoaded', () => {
         userChatLogs.private[convId].forEach(msg => appendMessage(msg));
     }
     
-    function checkParticipants(a, b){
-        if(a.length !== b.length) return false;
-        
-        const sortA = [...a].sort();
-        const sortB = [...b].sort();
-        
-        return sortA.every((val, i) => val === sortB[i]);
-    }
-    
     function sendMessage() {
         console.log("Sendt melding (sendMessage())");
         if (sending) return;
@@ -278,4 +315,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     init();
+    
+    // Modal
+    function openNewConvModal(){
+        newConvOverlay.classList.remove("hidden");
+    }
+    
+    function closeNewConvModal(){
+        newConvOverlay.classList.add("hidden");
+    }
+    
+    
 });

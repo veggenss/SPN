@@ -44,6 +44,26 @@
           <h3>Detaljer</h3>
           <p>Velg en samtale for å se informasjon.</p>
       </div>
+      
+      <div id="newConvOverlay" class="overlay hidden">
+         <div class="modal">
+            <h2>Opprett Samtale</h2>
+            <form id="newConvForm">
+               <label>Samtale Navn</label>
+               <input type="text" id="convName" placeholder="Navn på samtale" required>
+               
+               <label>Deltakere</label>
+               <button type="button" id="addParticipantBtn">Legg til Deltaker</button>
+            
+               <div id="newConvParticipants"></div>
+            
+               <div class="actions">
+                  <button type="button" id="closeOverlay">Avbryt</button>
+                  <button type="submit">Opprett</button>
+               </div>
+            </form>
+         </div>
+      </div>
    </div>
 </body>
 <script>
