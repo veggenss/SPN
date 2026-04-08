@@ -36,22 +36,25 @@ class ChatService{
         return $this->chatRepo->getConversations($user_id);
     }
     
-    public function makeConversation(int $user1_id, string $user2_name): array|bool
+    public function makeConversation(int $userId, array $data): array|bool
     {
-        $user2_id = $this->userRepo->findByName($user2_name)['id'];
-        if(!$user2_id){
-            throw new \Spn\Exceptions\InvalException("Bruker '{$user2_name}' eksisterer ikke.");
+        $participants = [];
+        
+        foreach($data['parties'] as $party){
+            $participants[] = (int)$this->userRepo->findByName($party)['id'];
         }
-        elseif($user2_id === $user1_id){
+        
+        if(in_array($userId, $participants)){
             throw new \Spn\Exceptions\InvalException("Kan ikke starte samtale med degselv!");
         }
         
-        if($this->chatRepo->findMutualConv([$user1_id, $user2_id]))
-        {
-            throw new \Spn\Exceptions\InvalException("Samtalen finnes allerede.");
-        }
+        $participants[] = $userId;
         
-        return $this->chatRepo->makeConversation($user1_id, $user2_id) ?: false;
+        $userIds = $participants
+            |> (fn($arr) => array_map('intval', $arr))
+            |> (fn($arr) => array_unique($arr))
+            |> (fn($arr) => array_values($arr));
+        return $this->chatRepo->makeConversation($userIds, $data['conv_name']) ?: false;
     }
     
     public function sendMessage(array $data): array
@@ -64,7 +67,7 @@ class ChatService{
             return $data;
         }
         
-        $data['conv_id'] = $this->chatRepo->findMutualConv($data['participants_id']);
+        $data['conv_id'] = $this->chatRepo->findConvByParties($data['participants_id']);
         
         if(!$this->chatRepo->savePrivateMessage($data)){
            throw new \Spn\Exceptions\ChatException("Kunne ikke dytte melding!");

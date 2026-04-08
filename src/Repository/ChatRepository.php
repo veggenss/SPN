@@ -30,7 +30,7 @@ class ChatRepository{
     {
         try{
             $convStmt = $this->conn->prepare('
-                SELECT c.id, c.date_added AS conv_created, c.latest_message, GROUP_CONCAT(DISTINCT u.username) AS participants, GROUP_CONCAT(DISTINCT u.id) AS participants_id
+                SELECT c.id, c.title, c.date_added AS conv_created, c.latest_message, GROUP_CONCAT(DISTINCT u.username) AS participants, GROUP_CONCAT(DISTINCT u.id) AS participants_id
                 FROM conversations c
                 JOIN conversation_members cm ON c.id = cm.conversation_id
                 JOIN users u ON cm.user_id = u.id
@@ -84,17 +84,28 @@ class ChatRepository{
         }
     }
     
-    public function makeConversation(int $user1_id, int $user2_id): int
+    public function makeConversation(array $userIds, string $title): int
     {
         $this->conn->begin_transaction();
         try{
-            $stmt = $this->conn->prepare('INSERT INTO conversations () VALUES ()');
+            $stmt = $this->conn->prepare('INSERT INTO conversations (title) VALUES (?)');
+            $stmt->bind_param("s", $title);
             $stmt->execute();
             $stmt->close();
             $conv_id = $this->conn->insert_id;
+
+            $placeholders = implode(',', array_fill(0, count($userIds), '(?, ?)'));
+            $types = str_repeat('ii', count($userIds));
+            $params = [];
             
-            $stmt = $this->conn->prepare('INSERT INTO conversation_members (conversation_id, user_id) VALUES (?, ?), (?, ?)');
-            $stmt->bind_param("iiii", $conv_id, $user1_id, $conv_id, $user2_id);
+            foreach($userIds as $id){
+                $params[] = $conv_id;
+                $params[] = $id;
+            }
+            
+            $stmt = $this->conn->prepare("INSERT INTO conversation_members (conversation_id, user_id) VALUES $placeholders;");
+            $stmt->bind_param($types, ...$params);
+            
             $stmt->execute();
             
             $this->conn->commit();
@@ -153,44 +164,32 @@ class ChatRepository{
         
     }
     
-    //finds a conversation between 2 users, return true if found, returns false otherwise
-    public function findMutualConv(array $user_ids)
+    public function findConvByParties(array $userIds)
     {
-        try{
-            $user_ids = array_values(array_unique($user_ids));
-            $count = count($user_ids);
-            
-            if($count < 2 || $count > 10){
-                throw new \Spn\Exceptions\InvalException("User count must be between 2 and 10");
-            }
-            
-            $placeholders = implode(',', array_fill(0, $count, '?'));
-            
-            $stmt = $this->conn->prepare("
-                SELECT conversation_id FROM conversation_members
-                GROUP BY conversation_id
-                HAVING COUNT(*) = ? AND SUM(user_id IN ($placeholders)) = ? 
-                LIMIT 1;
-            ");
-            
-            $types = str_repeat('i', $count + 2);
-            $params = array_merge([$count], $user_ids, [$count]);
-            
+        $numUsers = count($userIds);
+        if ($numUsers < 2 || $numUsers > 10) {
+            throw new \Spn\Exceptions\InvalException("Participants must be between 2 and 10.");
+        }
+    
+        $placeholders = implode(',', array_fill(0, $numUsers, '?'));
+            $sql = "
+                SELECT cm.conversation_id
+                FROM conversation_members cm
+                GROUP BY cm.conversation_id
+                HAVING COUNT(*) = ? AND SUM(cm.user_id IN ($placeholders)) = ?
+                LIMIT 1
+            ";
+        
+        try {
+            $stmt = $this->conn->prepare($sql);
+            $types = str_repeat('i', $numUsers + 2); // COUNT(*) + userIds + SUM(...)
+            $params = array_merge([$numUsers], $userIds, [$numUsers]);
             $stmt->bind_param($types, ...$params);
             $stmt->execute();
-                
-            $res = $stmt->get_result();
-            $stmt->close();
-            if($row = $res->fetch_assoc()){
-                $res->free();
-                return (int)$row['conversation_id'];
-            }
-            $res->free();
-            return NULL;
-        }
-        catch(\mysqli_sql_exception $e){
-            error_log($e->getMessage());
-            throw new \Spn\Exceptions\DatabaseException("Find Mutual Conv Failed: " . $e->getMessage(), 0, $e);
+            $result = $stmt->get_result()->fetch_assoc();
+            return $result['conversation_id'] ?? null;
+        } catch (\mysqli_sql_exception $e) {
+            throw new \Spn\Exceptions\DatabaseException("findConvByParties Failed: " . $e->getMessage(), 0, $e);
         }
     }
 }

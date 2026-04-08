@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
             wrapper.innerHTML = `
                 <input type="text" placeholder="Brukernavn" required>
-                <button type="button" class="remove">✕</button>
+                <button type="button" class="remove">X</button>
             `;
         
             wrapper.querySelector(".remove").onclick = () => {
@@ -79,20 +79,41 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const convName = document.getElementById('convName').value;
             
-            const participants = [...newConvPartyInput.querySelectorAll('input')].map(input => input.value.trim()).filter(Boolean);
+            const participants = [...newConvPartyInput.querySelectorAll('input')]
+                .filter(input => !input.disabled)
+                .map(input => input.value.trim())
+                .filter(Boolean);
             
             if(participants.length < 1) return;
             
-            makeConversation({
-                name: convName,
-                participants: participants
-            });
+            makeConversation(convName, participants);
             
-            form.reset();
+            newConvForm.reset();
             newConvPartyInput.innerHTML = "";
             count = 0;
             
             closeNewConvModal();
+        });
+        
+        globalChat.addEventListener('click', () => {
+            activeConvId = null;
+            messagesDiv.innerHTML = '';
+            renderUserChatLog();
+        
+            document.querySelectorAll('.conversation, #global-chat')
+                .forEach(el => el.classList.remove('active'));
+        
+            globalChat.classList.add('active');
+        });
+        
+        wrapper.addEventListener('click', () => {
+            renderUserChatLog(data.id, data.participants_id);
+            activeConvId = data.id;
+        
+            document.querySelectorAll('.conversation, #global-chat')
+                .forEach(el => el.classList.remove('active'));
+        
+            wrapper.classList.add('active');
         });
     }
 
@@ -119,12 +140,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
         
-    async function makeConversation(data){
+    async function makeConversation(title, participants){
         try{
             const req = await fetch('/api/make-conv', {
                 method: 'POST',
                 headers: {"Content-Type": "application/json"},
-                body: JSON.stringify(data)
+                body: JSON.stringify({title: title, participants: participants})
             });
             const data = await req.json();
             
@@ -193,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const username = document.createElement('span');
         username.classList.add('conversation-name');
-        username.textContent = data.participants[0]; //should be data.title
+        username.textContent = data.title || data.participants[0]; //should be data.title
 
         const prevStr = document.createElement('span');
         prevStr.classList.add('conversation-prevStr');
@@ -319,6 +340,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Modal
     function openNewConvModal(){
         newConvOverlay.classList.remove("hidden");
+        const selfInput = document.getElementById("selfUser");
+            if (selfInput) {
+                selfInput.value = username + " (deg)";
+            }
     }
     
     function closeNewConvModal(){

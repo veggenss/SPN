@@ -55,8 +55,12 @@
                <label>Deltakere</label>
                <button type="button" id="addParticipantBtn">Legg til Deltaker</button>
             
-               <div id="newConvParticipants"></div>
-            
+               <div id="newConvParticipants">
+                  <div class="participant self">
+                     <input type="text" id="selfUser" disabled>
+                  </div>
+               </div>
+               
                <div class="actions">
                   <button type="button" id="closeOverlay">Avbryt</button>
                   <button type="submit">Opprett</button>
