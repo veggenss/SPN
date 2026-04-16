@@ -16,7 +16,6 @@ class UserController{
         require __DIR__ . '/../../views/user/profile.php';
     }
     
-    //logout user
     public function logout(): void
     {
         session_destroy();

@@ -76,7 +76,7 @@ class ChatRepository{
                 }
             }
             
-            return array_values($convArr); //array_values fordi hvis ikke gjør PHP det om til en objekt
+            return array_values($convArr); //array_values since PHP converts it to object otherwise
         }
         catch(\mysqli_sql_exception $e){
             error_log($e->getMessage());
@@ -88,7 +88,7 @@ class ChatRepository{
     {
         $this->conn->begin_transaction();
         try{
-            $stmt = $this->conn->prepare('INSERT INTO conversations (title) VALUES (?)');
+            $stmt = $this->conn->prepare('INSERT INTO conversations (title) VALUES (?);');
             $stmt->bind_param("s", $title);
             $stmt->execute();
             $stmt->close();
@@ -119,10 +119,39 @@ class ChatRepository{
         }
     }
     
+    public function findConvByParties(array $userIds): mixed
+    {
+        $numUsers = count($userIds);
+        if ($numUsers < 2 || $numUsers > 10) {
+            throw new \Spn\Exceptions\InvalException("Participants must be between 2 and 10.");
+        }
+    
+        $placeholders = implode(',', array_fill(0, $numUsers, '?'));
+        $sql = "
+            SELECT cm.conversation_id
+            FROM conversation_members cm
+            GROUP BY cm.conversation_id
+            HAVING COUNT(*) = ? AND SUM(cm.user_id IN ($placeholders)) = ?
+            LIMIT 1;
+        ";
+        
+        try {
+            $stmt = $this->conn->prepare($sql);
+            $types = str_repeat('i', $numUsers + 2);
+            $params = array_merge([$numUsers], $userIds, [$numUsers]);
+            $stmt->bind_param($types, ...$params);
+            $stmt->execute();
+            $result = $stmt->get_result()->fetch_assoc();
+            return $result['conversation_id'] ?? null;
+        } catch (\mysqli_sql_exception $e) {
+            throw new \Spn\Exceptions\DatabaseException("findConvByParties Failed: " . $e->getMessage(), 0, $e);
+        }
+    }
+    
     public function savePrivateMessage(array $data)
     {
         try{
-            $stmt = $this->conn->prepare('INSERT INTO private_messages (conversation_id, sender_id, message) VALUES (?, ?, ?)');
+            $stmt = $this->conn->prepare('INSERT INTO private_messages (conversation_id, sender_id, message) VALUES (?, ?, ?);');
             $stmt->bind_param("iis", $data['conv_id'], $data['sender_id'], $data['message']);
             
             $status = $stmt->execute();
@@ -137,7 +166,7 @@ class ChatRepository{
     public function savePublicMessage(array $data)
     {
         try{
-            $stmt = $this->conn->prepare('INSERT INTO public_messages (sender_id, message) VALUES (?, ?)');
+            $stmt = $this->conn->prepare('INSERT INTO public_messages (sender_id, message) VALUES (?, ?);');
             $stmt->bind_param("is", $data['sender_id'], $data['message']);
             
             $status = $stmt->execute();
@@ -162,34 +191,5 @@ class ChatRepository{
     public function removeConversation(int $id)
     {
         
-    }
-    
-    public function findConvByParties(array $userIds)
-    {
-        $numUsers = count($userIds);
-        if ($numUsers < 2 || $numUsers > 10) {
-            throw new \Spn\Exceptions\InvalException("Participants must be between 2 and 10.");
-        }
-    
-        $placeholders = implode(',', array_fill(0, $numUsers, '?'));
-        $sql = "
-            SELECT cm.conversation_id
-            FROM conversation_members cm
-            GROUP BY cm.conversation_id
-            HAVING COUNT(*) = ? AND SUM(cm.user_id IN ($placeholders)) = ?
-            LIMIT 1
-        ";
-        
-        try {
-            $stmt = $this->conn->prepare($sql);
-            $types = str_repeat('i', $numUsers + 2);
-            $params = array_merge([$numUsers], $userIds, [$numUsers]);
-            $stmt->bind_param($types, ...$params);
-            $stmt->execute();
-            $result = $stmt->get_result()->fetch_assoc();
-            return $result['conversation_id'] ?? null;
-        } catch (\mysqli_sql_exception $e) {
-            throw new \Spn\Exceptions\DatabaseException("findConvByParties Failed: " . $e->getMessage(), 0, $e);
-        }
     }
 }

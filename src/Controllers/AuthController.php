@@ -32,8 +32,8 @@ class AuthController{
     {
         try{
             $data = [
-                'username' => $_POST['username'],
-                'password' => $_POST['password']
+                'username' => htmlspecialchars($_POST['username']),
+                'password' => htmlspecialchars($_POST['password'])
             ];
             
             $user = $this->auth->login($data);
@@ -76,9 +76,9 @@ class AuthController{
     {
         try{
             $data = [
-                'username' => $_POST['username'],
-                'password' => $_POST['password'],
-                'email' => $_POST['email']
+                'username' => htmlspecialchars($_POST['username']),
+                'password' => htmlspecialchars($_POST['password']),
+                'email' => htmlspecialchars($_POST['email'])
             ];
             
             $this->auth->register($data);
