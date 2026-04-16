@@ -6,25 +6,30 @@ use Spn\Service\AuthService;
 class AuthController{
     private AuthService $auth;
     
-    public function __construct(){
+    public function __construct()
+    {
         $this->auth = new AuthService;
     }
     
-    public function showRegister(): void{
+    public function showRegister(): void
+    {
         require __DIR__ . '/../../views/auth/register.php';
     }
     
-    public function showLogin(): void{
+    public function showLogin(): void
+    {
         require __DIR__ . '/../../views/auth/login.php';
     }
     
-    public function showPasswordReset(): void{
+    public function showPasswordReset(): void
+    {
         require __DIR__ . '/../../views/auth/password_reset.php';
     }
     
     
     //login user
-    public function login(): void{
+    public function login(): void
+    {
         try{
             $data = [
                 'username' => $_POST['username'],
@@ -67,7 +72,8 @@ class AuthController{
     
     
     //register user
-    public function register(): void{
+    public function register(): void
+    {
         try{
             $data = [
                 'username' => $_POST['username'],

@@ -6,11 +6,13 @@ use Spn\Service\ChatService;
 class ChatController{
     private ChatService $chat;
     
-    public function __construct(){
+    public function __construct()
+    {
         $this->chat = new ChatService;
     }
     
-    public function showChat(){
+    public function showChat()
+    {
         try{
             $_SESSION['user']['wsToken'] = $this->chat->createWsToken($_SESSION['user']['id']);
             require __DIR__ . '/../../views/chat/main.php';
@@ -25,7 +27,8 @@ class ChatController{
     }
     
     //fetch relevant logs
-    public function getUserLogs(): void{  
+    public function getUserLogs(): void
+    {  
         header('Content-Type: application/json');
         try{
             echo json_encode([
@@ -60,7 +63,8 @@ class ChatController{
     
     
     //create user conversation
-    public function makeConversation(): void{
+    public function makeConversation(): void
+    {
         header('Content-Type: application/json');
         $data = json_decode(file_get_contents('php://input'), true);
         try{
@@ -95,7 +99,8 @@ class ChatController{
     
     
     //send user message
-    public function sendMessage(): void{
+    public function sendMessage(): void
+    {
         $data = json_decode(file_get_contents('php://input'), true);
         try{
             $this->chat->sendMessage($data);

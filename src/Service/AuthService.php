@@ -6,11 +6,13 @@ use Spn\Repository\UserRepository;
 class AuthService{
     private UserRepository $userRepo;
     
-    public function __construct(){
+    public function __construct()
+    {
         $this->userRepo = new UserRepository;
     }
     
-    public function login(array $data):bool|array{
+    public function login(array $data): bool|array
+    {
         $user = $this->userRepo->findByName($data['username']);
         if(!$user || !password_verify($data['password'], $user['password'])){
             throw new \Spn\Exceptions\InvalException("Feil brukernavn eller passord");
@@ -18,7 +20,8 @@ class AuthService{
         return $user;
     }
     
-    public function register(array $data){
+    public function register(array $data): bool
+    {
         $exists = $this->userRepo->findByName($data['username']);
         if($exists){
             throw new \Spn\Exceptions\InvalException("Username already exists");
@@ -28,7 +31,8 @@ class AuthService{
         return $this->userRepo->save($data);
     }
         
-    public function delete(array $data){
+    public function delete(array $data)
+    {
         
     }
 }

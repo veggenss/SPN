@@ -172,17 +172,17 @@ class ChatRepository{
         }
     
         $placeholders = implode(',', array_fill(0, $numUsers, '?'));
-            $sql = "
-                SELECT cm.conversation_id
-                FROM conversation_members cm
-                GROUP BY cm.conversation_id
-                HAVING COUNT(*) = ? AND SUM(cm.user_id IN ($placeholders)) = ?
-                LIMIT 1
-            ";
+        $sql = "
+            SELECT cm.conversation_id
+            FROM conversation_members cm
+            GROUP BY cm.conversation_id
+            HAVING COUNT(*) = ? AND SUM(cm.user_id IN ($placeholders)) = ?
+            LIMIT 1
+        ";
         
         try {
             $stmt = $this->conn->prepare($sql);
-            $types = str_repeat('i', $numUsers + 2); // COUNT(*) + userIds + SUM(...)
+            $types = str_repeat('i', $numUsers + 2);
             $params = array_merge([$numUsers], $userIds, [$numUsers]);
             $stmt->bind_param($types, ...$params);
             $stmt->execute();
