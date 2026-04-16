@@ -13,20 +13,35 @@
 
 <body>   
    <div class="spn">
-
-      <!-- Direct message liste -->
       <div class="panel-left">
          <h4>General</h4>
          <div class="top-buttons">
              <button id="global-chat"><i class="fa-regular fa-message"></i> Global</button>
-             <button onclick="window.location.href='/profile';"><i class="fa-regular fa-user"></i> Min Profil</button>
-             <button onclick="window.location.href='/friends';"><i class="fa-regular fa-face-smile"></i> Venner</button>
+             <button onclick="window.location.href='/chat/profile';"><i class="fa-regular fa-user"></i> Min Profil</button>
+             <button onclick="window.location.href='/chat/friends';"><i class="fa-regular fa-face-smile"></i> Venner</button>
          </div>
      
          <div class="separator"></div>
          
          <h4>Dine Samtaler</h4>
-         <button id="new-conv" class="new-conv-button"><i class="fa-solid fa-plus"></i> Ny samtale</button>
+         <button command="show-modal" commandfor="create-conversation" id="new-conv" class="new-conv-button"><i class="fa-solid fa-plus"></i> Ny Samtale</button>
+         <dialog id="create-conversation" closeby="any">
+             <form id="newConvForm" method="POST">
+                <h2>Ny Samtale</h2>
+                <label>Samtale Navn</label>
+                <input type="text" id="convName" placeholder="Navn på samtale" required>
+                
+                <label>Deltakere</label>
+                <button type="button" id="addParticipantBtn">Legg til Deltaker</button>
+             
+                <div id="newConvParticipants"></div>
+                
+                <div class="actions">
+                   <button type="button" commandfor="create-conversation" command="close">Avbryt</button>
+                   <button type="submit">Opprett</button>
+                </div>
+             </form>
+         </dialog>
      
          <div id="conv-list"></div>
       </div>
@@ -44,30 +59,6 @@
           <h3>Detaljer</h3>
           <p>Velg en samtale for å se informasjon.</p>
       </div>
-      
-      <!--<div id="newConvOverlay" class="overlay hidden">
-         <div class="modal">
-            <h2>Opprett Samtale</h2>
-            <form id="newConvForm">
-               <label>Samtale Navn</label>
-               <input type="text" id="convName" placeholder="Navn på samtale" required>
-               
-               <label>Deltakere</label>
-               <button type="button" id="addParticipantBtn">Legg til Deltaker</button>
-            
-               <div id="newConvParticipants">
-                  <div class="participant self">
-                     <input type="text" id="selfUser" disabled>
-                  </div>
-               </div>
-               
-               <div class="actions">
-                  <button type="button" id="closeOverlay">Avbryt</button>
-                  <button type="submit">Opprett</button>
-               </div>
-            </form>
-         </div>
-      </div>-->
    </div>
 </body>
 <script>

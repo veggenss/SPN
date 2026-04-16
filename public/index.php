@@ -22,7 +22,7 @@ $dispatcher = \FastRoute\simpleDispatcher(function(RouteCollector $r){
     //Page
     $r->addRoute('GET', '/password_reset', [AuthController::class, 'showPasswordReset']);
     $r->addRoute('GET', '/chat', [ChatController::class, 'showChat']);
-    $r->addRoute('GET', '/profile', [UserController::class, 'showProfile']);
+    $r->addRoute('GET', '/chat/profile', [UserController::class, 'showProfile']);
     
     //API
     $r->addRoute('POST', '/api/get-user-logs', [ChatController::class, 'getUserLogs']);

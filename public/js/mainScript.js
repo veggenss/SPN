@@ -2,13 +2,10 @@ const messagesDiv = document.getElementById('messages');
 const input = document.getElementById('messageInput');
 const sendButton = document.getElementById('sendButton');
 
-const newConvBtn = document.getElementById('new-conv');
-const newConvOverlay = document.getElementById("newConvOverlay");
 const newConvPartyInput = document.getElementById('newConvParticipants');
 const newConvPartyAdd = document.getElementById('addParticipantBtn');
 const newConvForm = document.getElementById('newConvForm');
-
-const closeOverlayBtn = document.getElementById("closeOverlay");
+const newConvDialog = document.getElementById('create-conversation');
 
 const convList = document.getElementById('conv-list');
 const globalChat = document.getElementById('global-chat');
@@ -19,13 +16,15 @@ const wsToken = window.currentUser.wsToken;
 // const currentProfilePictureUrl = window.currentProfilePictureUrl;
 
 let participants_id = [];
-let convParticipantsCount = 0;
+let newConvPartyCount = 0;
 let userChatLogs = {}; //Stores all fetched messages
 let activeConvId = null;
 let sending = false;
 let ws = null;
 
 console.log(userId, username);
+
+const getNewConvPartyCount = () => newConvPartyInput.querySelectorAll('.participant:not(.self)').length;
 
 document.addEventListener('DOMContentLoaded', () => {
     function init() {
@@ -44,36 +43,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         
+        // toggle globalChat
         globalChat.addEventListener('click', () => {
             activeConvId = null;
             messagesDiv.innerHTML = '';
             renderUserChatLog();
-        });
-        
-        newConvBtn.addEventListener('click', openNewConvModal);
-        
-        closeOverlayBtn.addEventListener('click', closeNewConvModal);
-        
-        newConvPartyAdd.addEventListener('click', () => {
-            if (convParticipantsCount >= 10) return;
             
-            const wrapper = document.createElement("div");
-            wrapper.classList.add("participant");
+            document.querySelectorAll('.conversation, #global-chat')
+                .forEach(el => el.classList.remove('active'));
         
-            wrapper.innerHTML = `
-                <input type="text" placeholder="Brukernavn" required>
-                <button type="button" class="remove">X</button>
-            `;
-        
-            wrapper.querySelector(".remove").onclick = () => {
-                wrapper.remove();
-                convParticipantsCount--;
-            };
-        
-            newConvPartyInput.appendChild(wrapper);
-            convParticipantsCount++;
+            globalChat.classList.add('active');
         });
-        
+
+        // open newConvDialogue
         newConvForm.addEventListener('submit', (e) => {
             e.preventDefault();
             
@@ -89,31 +71,48 @@ document.addEventListener('DOMContentLoaded', () => {
             makeConversation(convName, participants);
             
             newConvForm.reset();
-            newConvPartyInput.innerHTML = "";
-            count = 0;
+            newConvPartyInput.innerHTML = `
+                <div class="participant self">
+                    <input type="text" value="${username}" disabled>
+                </div>
+            `;
+            newConvPartyCount = 0;
+        });
+        
+        // add/remove conv participants
+        newConvPartyAdd.addEventListener('click', () => {
+            if (getNewConvPartyCount() >= 9) return;
             
-            closeNewConvModal();
+            const wrapper = document.createElement("div");
+            wrapper.classList.add("participant");
+        
+            wrapper.innerHTML = `
+                <input type="text" placeholder="Brukernavn" required>
+                <button type="button" class="remove">X</button>
+            `;
+        
+            wrapper.querySelector(".remove").onclick = () => {
+                wrapper.remove();
+                newConvPartyCount--;
+            };
+        
+            newConvPartyInput.appendChild(wrapper);
+            newConvPartyCount++;
         });
         
-        globalChat.addEventListener('click', () => {
-            activeConvId = null;
-            messagesDiv.innerHTML = '';
-            renderUserChatLog();
-        
-            document.querySelectorAll('.conversation, #global-chat')
-                .forEach(el => el.classList.remove('active'));
-        
-            globalChat.classList.add('active');
+        // close newConvDialogue
+        newConvDialog.addEventListener('close', () => {
+            newConvForm.reset();
+            newConvPartyCount = 0;
         });
         
-        wrapper.addEventListener('click', () => {
+        convWrapper.addEventListener('click', () => {
             renderUserChatLog(data.id, data.participants_id);
             activeConvId = data.id;
         
-            document.querySelectorAll('.conversation, #global-chat')
-                .forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.conversation, #global-chat').forEach(el => el.classList.remove('active'));
         
-            wrapper.classList.add('active');
+            convWrapper.classList.add('active');
         });
     }
 
@@ -202,9 +201,9 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("render", data);
         if (document.getElementById('conversation-' + data.id)) return;
 
-        const wrapper = document.createElement('div');
-        wrapper.classList.add('conversation');
-        wrapper.id = 'conversation-' + data.id;
+        const convWrapper = document.createElement('div');
+        convWrapper.classList.add('conversation');
+        convWrapper.id = 'conversation-' + data.id;
 
         const userWrapper = document.createElement('div');
         userWrapper.classList.add('conversation-user');
@@ -228,14 +227,14 @@ document.addEventListener('DOMContentLoaded', () => {
         textWrapper.appendChild(username);
         textWrapper.appendChild(prevStr);
         userWrapper.appendChild(textWrapper);
-        wrapper.appendChild(userWrapper);
+        convWrapper.appendChild(userWrapper);
 
-        wrapper.addEventListener('click', () => {
+        convWrapper.addEventListener('click', () => {
             renderUserChatLog(data.id, data.participants_id);
             activeConvId = data.id;
         });
 
-        convList.appendChild(wrapper);
+        convList.appendChild(convWrapper);
     }
     
     function renderUserChatLog(convId, parties) {
