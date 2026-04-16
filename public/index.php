@@ -41,7 +41,7 @@ $publicRoutes = [
 ];
 
 if(!in_array($uri, $publicRoutes)){
-    if(!$_SESSION['user']['id']){
+    if(!isset($_SESSION['user']['id'])){
         header('Location: /login');
         exit;
     }

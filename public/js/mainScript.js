@@ -140,12 +140,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
         
-    async function makeConversation(title, participants){
+    async function makeConversation(title, participants) {
         try{
             const req = await fetch('/api/make-conv', {
                 method: 'POST',
                 headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({title: title, participants: participants})
+                body: JSON.stringify({title: title, parties: participants})
             });
             const data = await req.json();
             
@@ -238,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
         convList.appendChild(wrapper);
     }
     
-    function renderUserChatLog(convId, parties){
+    function renderUserChatLog(convId, parties) {
         messagesDiv.innerHTML = '';
         if(!(convId || parties)){
             participants_id = [];
@@ -336,19 +336,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     init();
-    
-    // Modal
-    function openNewConvModal(){
-        newConvOverlay.classList.remove("hidden");
-        const selfInput = document.getElementById("selfUser");
-            if (selfInput) {
-                selfInput.value = username + " (deg)";
-            }
-    }
-    
-    function closeNewConvModal(){
-        newConvOverlay.classList.add("hidden");
-    }
-    
-    
 });

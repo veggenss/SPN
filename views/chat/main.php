@@ -45,7 +45,7 @@
           <p>Velg en samtale for å se informasjon.</p>
       </div>
       
-      <div id="newConvOverlay" class="overlay hidden">
+      <!--<div id="newConvOverlay" class="overlay hidden">
          <div class="modal">
             <h2>Opprett Samtale</h2>
             <form id="newConvForm">
@@ -67,7 +67,7 @@
                </div>
             </form>
          </div>
-      </div>
+      </div>-->
    </div>
 </body>
 <script>
