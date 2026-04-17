@@ -54,7 +54,7 @@ class ChatService{
             |> (fn($arr) => array_map('intval', $arr))
             |> (fn($arr) => array_unique($arr))
             |> (fn($arr) => array_values($arr));
-        return $this->chatRepo->makeConversation($userIds, $data['conv_name']) ?: false;
+        return $this->chatRepo->makeConversation($userIds, $data['title']) ?: false;
     }
     
     public function sendMessage(array $data): array

@@ -1,11 +1,13 @@
+const alertCon = document.getElementById('alert-container');
 const messagesDiv = document.getElementById('messages');
 const input = document.getElementById('messageInput');
 const sendButton = document.getElementById('sendButton');
 
+const newConvOpen = document.getElementById('new-conv');
+const newConvDialog = document.getElementById('create-conversation');
+const newConvForm = document.getElementById('newConvForm');
 const newConvPartyInput = document.getElementById('newConvParticipants');
 const newConvPartyAdd = document.getElementById('addParticipantBtn');
-const newConvForm = document.getElementById('newConvForm');
-const newConvDialog = document.getElementById('create-conversation');
 
 const convList = document.getElementById('conv-list');
 const globalChat = document.getElementById('global-chat');
@@ -55,7 +57,22 @@ document.addEventListener('DOMContentLoaded', () => {
             globalChat.classList.add('active');
         });
 
-        // open newConvDialogue
+        // open newConvDialouge
+        newConvOpen.addEventListener('click', () => {
+            newConvPartyInput.innerHTML = `
+                <div class="participant self">
+                    <input type="text" value="${username}" disabled>
+                </div>
+            `; 
+        });
+        
+        // close newConvDialogue
+        newConvDialog.addEventListener('close', () => {
+            newConvForm.reset();
+            newConvPartyCount = 0;
+        });
+        
+        // submit newConvDialogue
         newConvForm.addEventListener('submit', (e) => {
             e.preventDefault();
             
@@ -66,16 +83,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 .map(input => input.value.trim())
                 .filter(Boolean);
             
-            if(participants.length < 1) return;
+            if (participants.length < 1) return;
+            
+            console.log("NewConvFormData \n", "convName: ", convName, "\n", "Parties: ", participants);
             
             makeConversation(convName, participants);
             
             newConvForm.reset();
-            newConvPartyInput.innerHTML = `
-                <div class="participant self">
-                    <input type="text" value="${username}" disabled>
-                </div>
-            `;
             newConvPartyCount = 0;
         });
         
@@ -99,13 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
             newConvPartyInput.appendChild(wrapper);
             newConvPartyCount++;
         });
-        
-        // close newConvDialogue
-        newConvDialog.addEventListener('close', () => {
-            newConvForm.reset();
-            newConvPartyCount = 0;
-        });
-        
+                
         convWrapper.addEventListener('click', () => {
             renderUserChatLog(data.id, data.participants_id);
             activeConvId = data.id;
@@ -147,6 +155,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({title: title, parties: participants})
             });
             const data = await req.json();
+            
+            if (data.class) {
+                alertCon.innerHTML = `
+                    <div class="${data.class}">
+                        <p>${data.message}</p>
+                    </div>
+                 `;
+                return
+            }
             
             if(data.conversation){
                 getUserLogs();

@@ -48,11 +48,12 @@
 
 
       <div class="chat">
-         <div id="messages"></div>
-         <div class="message-inputs">
-            <input type="text" id="messageInput" placeholder="Skriv melding...">
-            <button id="sendButton">Send</button>
-         </div>
+          <div id="alert-container"></div>
+          <div id="messages"></div>
+          <div class="message-inputs">
+              <input type="text" id="messageInput" placeholder="Skriv melding...">
+              <button id="sendButton">Send</button>
+          </div>
       </div>
       
       <div class="panel-right">

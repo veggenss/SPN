@@ -14,6 +14,12 @@
     --text-main: #0f172a;
     --text-muted: #5f6b85;
 
+    /*responses*/
+    --negative-bg: #ffe0e0;
+    --negative-text: #990000;
+    --positive-bg: #e0ffe0;
+    --positive-text: #007700;
+    
     /*borders and shadow */
     --border: #d9def5;
     --shadow-sm: 0 2px 6px rgba(0,0,0,0.05);
@@ -292,26 +298,6 @@ html, body {
     font-weight: 600;
 }
 
-
-/*overlay*/
-/*.overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.45); /* matches text tone */
-    backdrop-filter: blur(4px);
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    z-index: 9999;
-}
-
-.overlay.hidden {
-    display: none;
-}*/
-
-
 /*inputs*/
 #addParticipantBtn {
     margin-top: 5px;
@@ -392,6 +378,148 @@ button:hover {
 .panel-header button {
     height: 35px;
     width: 35px;
+}
+
+/*responses*/
+.error{
+    background-color: var(--negative-bg);
+}
+
+.error p{
+    color: var(--negative-text);
+}
+
+.success{
+   background-color: var(--positive-bg); 
+}
+
+.success p {
+    color: var(--positive-text-text);
+}
+
+/* dialog base */
+dialog {
+    margin: auto;
+    border: none;
+    border-radius: var(--radius);
+    padding: 0;
+    background: transparent;
+}
+
+/* backdrop */
+dialog::backdrop {
+    background: rgba(15, 23, 42, 0.35);
+    backdrop-filter: blur(4px);
+}
+
+/* inner container */
+dialog form {
+    background: var(--bg-panel);
+    padding: 24px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border);
+    width: 400px;
+    max-width: 90vw;
+
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* title */
+dialog h2 {
+    margin-bottom: 5px;
+    font-size: 1.3rem;
+}
+
+/* labels */
+dialog label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+/* inputs inside dialog */
+dialog input {
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: white;
+    font-size: 0.95rem;
+    box-shadow: var(--shadow-sm);
+}
+
+dialog input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(91,95,240,0.15);
+    outline: none;
+}
+
+/* participant rows */
+.participant {
+    display: flex;
+    gap: 8px;
+}
+
+.participant input {
+    flex: 1;
+}
+
+/* remove button */
+.participant .remove {
+    background: transparent;
+    color: var(--text-muted);
+    border-radius: var(--radius);
+}
+
+.participant .remove:hover {
+    background: var(--bg-soft);
+}
+
+/* add participant button */
+#addParticipantBtn {
+    align-self: flex-start;
+    font-size: 0.9rem;
+}
+
+/* actions (footer buttons) */
+.actions {
+    margin-top: 10px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* cancel button */
+.actions button[type="button"] {
+    background: transparent;
+    color: var(--text-muted);
+}
+
+.actions button[type="button"]:hover {
+    background: var(--bg-soft);
+}
+
+/* submit button */
+.actions button[type="submit"] {
+    padding: 10px 18px;
+}
+
+/* subtle animation */
+dialog[open] form {
+    animation: dialogFade 0.2s ease;
+}
+
+@keyframes dialogFade {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 /*media*/
