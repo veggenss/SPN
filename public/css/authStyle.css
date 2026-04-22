@@ -54,8 +54,7 @@ body::before {
 }
 
 
-.auth-con,
-.mail-con {
+.auth-con {
     background-color: var(--bg-container);
     padding: 40px 30px;
     border-radius: var(--radius);
@@ -185,6 +184,7 @@ a:hover {
     height: 50px;
     animation: spin 1.5s linear infinite;
 }
+
 @keyframes spin{
     0% {
         transform: rotate(0deg);
@@ -194,7 +194,7 @@ a:hover {
         transform: rotate(360deg);
     }
 }
-/* Responsive */
+
 @media (max-width: 480px) {
     .auth-con,
     .auth-container {

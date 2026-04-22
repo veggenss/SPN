@@ -58,6 +58,7 @@ class ChatController{
                 "class" => "error",
                 "message" => "Ukjent feil!"
             ]);
+            exit;
         }
     }
     
@@ -94,9 +95,9 @@ class ChatController{
                 "class" => "error",
                 "message" => "Ukjent feil!"
             ]);
+            exit;
         }
     }
-    
     
     //send user message
     public function sendMessage(): void
@@ -127,6 +128,7 @@ class ChatController{
                 "class" => "error",
                 "message" => "Ukjent feil!"
             ]);
+            exit;
         }
     }
 }

@@ -71,10 +71,10 @@ class AuthController{
                 "class" => "error",
                 "message" => "Ukjent feil!"
             ];
+            exit;
         }
     }
     
-
     public function register(): void
     {
         try{
@@ -88,7 +88,7 @@ class AuthController{
             
             $_SESSION['flash'] = [
                 "class" => "success",
-                "message" => "Du må verifisere e-posten send til {$data['email']}"
+                "message" => "Verifiserings e-post er send til {$data['email']}"
             ];
             
             header('Location: /register');
@@ -117,11 +117,27 @@ class AuthController{
                 "class" => "error",
                 "message" => "Ukjent feil!"
             ];
+            exit;
         }
     }
     
-    public function verifyMailToken(): void
+    public function handleMailToken(): void
     {
-        
+        header('Content-Type: application/json');
+        $token = json_decode(file_get_contents('php://input'), true);
+        try{
+            $this->auth->verifyEmail($token);
+            echo json_encode([
+                "class" => "success"
+            ]);
+            exit;
+        }
+        catch(\Spn\Exceptions\InvalException $e){
+            echo json_encode([
+                "class" => "error",
+                "message" => "Something went wrong, uppsie woopsie!"
+            ]);
+            exit;
+        } 
     }
 }

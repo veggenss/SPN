@@ -11,27 +11,7 @@ class AuthService{
         $this->userRepo = new UserRepository;
     }
     
-    public function login(array $data): bool|array
-    {
-        $user = $this->userRepo->findByName($data['username']);
-        if(!$user || !password_verify($data['password'], $user['password'])){
-            throw new \Spn\Exceptions\InvalException("Feil brukernavn eller passord");
-        }
-        return $user;
-    }
-    
-    public function register(array $data): bool
-    {
-        $exists = $this->userRepo->findByName($data['username']);
-        if($exists){
-            throw new \Spn\Exceptions\InvalException("Username already exists");
-        }
-        
-        $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
-        return $this->userRepo->save($data);
-    }
-       
-    public function sendVerificationEmail($to, $userId): bool
+    private function sendVerificationEmail($to, $token): bool
     {
         $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
         try{
@@ -52,43 +32,81 @@ class AuthService{
             $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') ? "https" : "http";
             $host = $_SERVER['HTTP_HOST'];
             $basePath = dirname($_SERVER['SCRIPT_NAME']);
-            $token = random_bytes(32);
+            
             $verificationUrl = "$protocol://$host$basePath/verify-mail?token=$token";
     
             $mail->CharSet = 'UTF-8';
-            $mail->Body = "<div style='
-                            font-family: Arial, sans-serif;
-                            background-color: #f4f4f4;
-                            padding: 20px;
-                            border-radius: 8px;
-                            max-width: 600px;
-                            margin: 0 auto;
-                            color: #333;'>
-                            <h2 style='color: #2c3e50;'>Hei <strong></strong>,</h2>
-                            <p>Klikk på knappen under for å bekrefte e-posten din:</p>
-                            <p style='text-align: center;'>
-                                <a href='$verificationUrl' style='
-                                display: inline-block;
-                                padding: 12px 20px;
-                                background-color: #3498db;
-                                color: #fff;
-                                text-decoration: none;
-                                border-radius: 5px;
-                                font-weight: bold;
-                                '>Bekreft e-post</a></p>
-                            <p style='font-size: 12px; color: #888;'>Hvis du ikke ba om denne e-posten, kan du bare ignorere den.</p>
-                            </div>";
-            $mail->send();
-            return true;
+            $mail->Body = "
+                <div style='
+                    font-family: Arial, sans-serif;
+                    background-color: #f4f4f4;
+                    padding: 20px;
+                    border-radius: 8px;
+                    max-width: 600px;
+                    margin: 0 auto;
+                    color: #333;
+                '>
+                    <h2 style='color: #2c3e50;'>Hei <strong></strong>,</h2>
+                    <p>Klikk på knappen under for å bekrefte e-posten din:</p>
+                    <p style='text-align: center;'>
+                        <a href='$verificationUrl' style='
+                            display: inline-block;
+                            padding: 12px 20px;
+                            background-color: #3498db;
+                            color: #fff;
+                            text-decoration: none;
+                            border-radius: 5px;
+                            font-weight: bold;
+                        '>Bekreft e-post</a>
+                    </p>
+                    <p style='font-size: 12px; color: #888;'>Hvis du ikke ba om denne e-posten, kan du bare ignorere den.</p>
+                </div>
+            ";
+                            
+            return $mail->send();
         }
         catch (\PHPMailer\PHPMailer\Exception $e) {
-            error_log('Epostfeil' . $mail->ErrorInfo);
+            error_log('PHPMailer: ' . $mail->ErrorInfo, "\nException: " . $e->getMessage());
             return false;
         }
     }
     
-    public function delete(array $data)
+    public function login(array $data): bool|array
     {
+        $user = $this->userRepo->findByName($data['username']);
+        if(!$user || !password_verify($data['password'], $user['password'])){
+            throw new \Spn\Exceptions\InvalException("Feil brukernavn eller passord");
+        }
         
+        return $user;
+    }
+    
+    public function register(array $data): bool
+    {
+        if($this->userRepo->findByName($data['username'])){
+            throw new \Spn\Exceptions\InvalException("Username already exists");
+        }
+        
+        $data['emailToken'] = bin2hex(random_bytes(32));
+        $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+        
+        if(!$this->userRepo->save($data)){
+            throw new \Spn\Exceptions\UserException("Kunne ikke registrere!");
+        }
+        
+        return $this->sendVerificationEmail($data['email'], $data['emailToken']);
+    }
+    
+    public function verifyEmail(string $token): bool
+    {
+        if(!$this->userRepo->findEmailToken($token)){
+            throw new \Spn\Exceptions\UserException("Kunne ikke finne token!");
+        }
+        return $this->userRepo->verifyEmailByToken($token);
+    }
+    
+    public function delete(array $data): bool
+    {
+        return false;
     }
 }

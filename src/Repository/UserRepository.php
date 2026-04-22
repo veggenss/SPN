@@ -42,6 +42,25 @@ class UserRepository{
         }
     }
     
+    public function findEmailToken(string $token): array|bool
+    {
+        try{
+            $stmt = $this->conn->prepare('SELECT * FROM users WHERE verify_email = ?');
+            $stmt->bind_param("s", $token);
+            $stmt->execute();
+            
+            $res = $stmt->get_result();
+            $user = $res->fetch_assoc();
+            
+            $res->free();
+            $stmt->close();
+            return true
+        }
+        catch(\mysqli_sql_exception $e){
+            throw new \Spn\Exceptions\DatabaseException("Failed to findEmailToken: " . $e->getMessage(), 0, $e);
+        }
+    }
+    
     public function findByToken(string $token)
     {
         try{
@@ -54,7 +73,7 @@ class UserRepository{
 
             $res->free();
             $stmt->close();
-            return $user;
+            return $tokenUser;
         }
         catch(\mysqli_sql_exception $e){
             throw new \Spn\Exceptions\DatabaseException("Failed to findByToken: " . $e->getMessage(), 0, $e);
@@ -79,8 +98,8 @@ class UserRepository{
     public function save(array $data): bool
     {
         try{
-            $stmt = $this->conn->prepare('INSERT INTO users (username, password, email) VALUES (?, ?, ?);');
-            $stmt->bind_param("sss", $data['username'], $data['password'], $data['email']);
+            $stmt = $this->conn->prepare('INSERT INTO users (username, password, email, verify_email) VALUES (?, ?, ?, ?);');
+            $stmt->bind_param("ssss", $data['username'], $data['password'], $data['email'], $data['emailToken']);
             
             $user = $stmt->execute();
             $stmt->close();
@@ -88,6 +107,21 @@ class UserRepository{
         }
         catch(\mysqli_sql_exception $e){
             throw new \Spn\Exceptions\DatabaseException("Failed to save user: " . $e->getMessage(), 0, $e);
+        }
+    }
+    
+    public function verifyEmailByToken(string $token): bool
+    {
+        try{
+            $stmt = $this->conn->prepare('UPDATE users SET verify_email = true WHERE verify_email = ?');
+            $stmt->bind_param("s", $token);
+            
+            $res = $stmt->execute();
+            $stmt->close();
+            return $res;
+        }
+        catch(\mysqli_sql_exception $e){
+            throw new \Spn\Exceptions\DatabaseException("Failed to verifyEmailByToken: " . $e->getMessage(), 0, $e);
         }
     }
     
