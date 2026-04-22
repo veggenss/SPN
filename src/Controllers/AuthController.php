@@ -16,18 +16,22 @@ class AuthController{
         require __DIR__ . '/../../views/auth/register.php';
     }
     
+    public function showEmailVerify(): void
+    {
+        require __DIR__ . '/../../views/auth/verify_email.php';
+    }
+    
     public function showLogin(): void
     {
         require __DIR__ . '/../../views/auth/login.php';
     }
-    
+
     public function showPasswordReset(): void
     {
         require __DIR__ . '/../../views/auth/password_reset.php';
     }
     
     
-    //login user
     public function login(): void
     {
         try{
@@ -70,8 +74,7 @@ class AuthController{
         }
     }
     
-    
-    //register user
+
     public function register(): void
     {
         try{
@@ -85,9 +88,10 @@ class AuthController{
             
             $_SESSION['flash'] = [
                 "class" => "success",
-                "message" => "Bruker Registrert!"
+                "message" => "Du må verifisere e-posten send til {$data['email']}"
             ];
-            header('Location: /login');
+            
+            header('Location: /register');
             exit;
         }
         catch(\Spn\Exceptions\InvalException $e){
@@ -114,5 +118,10 @@ class AuthController{
                 "message" => "Ukjent feil!"
             ];
         }
+    }
+    
+    public function verifyMailToken(): void
+    {
+        
     }
 }

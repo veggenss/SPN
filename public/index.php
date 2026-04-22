@@ -15,8 +15,12 @@ $dispatcher = \FastRoute\simpleDispatcher(function(RouteCollector $r){
     //Auth
     $r->addRoute('GET', '/login', [AuthController::class, 'showLogin']);
     $r->addRoute('POST', '/login', [AuthController::class, 'login']);
+    
     $r->addRoute('GET', '/register', [AuthController::class, 'showRegister']);
     $r->addRoute('POST', '/register', [AuthController::class, 'register']);
+    
+    $r->addRoute('GET', '/verify_email', [AuthController::class, 'showEmailVerify']);
+    
     $r->addRoute('GET', '/logout', [UserController::class, 'logout']);
     
     //Page
@@ -37,7 +41,8 @@ $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $publicRoutes = [
     '/login',
     '/register',
-    '/password_reset'
+    '/password_reset',
+    '/verify_email'
 ];
 
 if(!in_array($uri, $publicRoutes)){
