@@ -8,7 +8,7 @@ class Connection{
     
     public static function get(): mysqli{
         if(!self::$conn){
-            \mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+            mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
             
             self::$conn = new \mysqli(
                 $_ENV['DB_HOST'],

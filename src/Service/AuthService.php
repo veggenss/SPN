@@ -66,7 +66,7 @@ class AuthService{
             return $mail->send();
         }
         catch (\PHPMailer\PHPMailer\Exception $e) {
-            error_log('PHPMailer: ' . $mail->ErrorInfo, "\nException: " . $e->getMessage());
+            error_log('PHPMailer: ' . $mail->ErrorInfo .  "\nException: " . $e->getMessage());
             return false;
         }
     }
