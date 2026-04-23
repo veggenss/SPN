@@ -1,55 +1,66 @@
-const authCon = document.getElementsByClassName('auth-con');
 const authBtn = document.getElementById('auth-button');
 const alertCon = document.getElementById('alert-con');
 
 const url = new URL(window.location.href);
 const emailToken = url.searchParams.get('token');
 
-authBtn.addEventListener('click', () => {
-    authBtn.classList.add('loading');
-    setTimeout(1000);
-    if(emailToken){
-        console.log("email Token: ", emailToken);
-        if(verifyEmail(emailToken)){
-            authBtn.classList.remove('loading');
-            alertCon.innerHTML = `
-                <div class="success">
-                    <p>Epost Verifisert!</p>
-                </div>
-            `;
-            authBtn.textContent = "Trykk her for å logge inn!";
-            authBtn.location="/login";
-        }
-    }
-    else {
-        alertCon.innerHTML = `
-            <div class="error">
-                <p>Ingen Token funnet!</p>
-            </div>
-        `;
-    }
-});
+authBtn.addEventListener('click', handleAuthClick);
 
-async function verifyEmail(emailToken){
-    try{
-        const req = await fetch('/api/verify-email', {
-            method: 'POST',
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({token: emailToken})
-        });
-        const data = await req.json();
-        
-        if (!data || data.class) {
-            alertCon.innerHTML = `
-                <div class="${data.class}">
-                    <p>${data.message}</p>
-                </div>
-             `;
-            return false;
+async function handleAuthClick() {
+    setLoading(true);
+
+    if (!emailToken) {
+        showAlert('error', 'Ingen token funnet!');
+        setLoading(false);
+        return;
+    }
+
+    console.log("email token:", emailToken);
+
+    try {
+        const ok = await verifyEmail(emailToken);
+
+        if (ok) {
+            showAlert('success', 'E-post verifisert!');
+            authBtn.textContent = "Trykk her for å logge inn";
+            window.location.href = "/login";
         }
-        return true;
     }
-    catch(err){
-        console.error("Error! \n", err);
+    catch (err) {
+        console.error(err);
+        showAlert('error', 'Noe gikk galt ved verifisering.');
     }
+    finally {
+        setLoading(false);
+    }
+}
+
+async function verifyEmail(token) {
+    const res = await fetch('/api/verify-email', {
+        method: 'POST',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || data?.class === "error") {
+        showAlert(data?.class || 'error', data?.message || 'Ukjent feil');
+        return false;
+    }
+
+    return true;
+}
+
+function showAlert(type, message) {
+    alertCon.innerHTML = `
+        <div class="${type}">
+            <p>${message}</p>
+        </div>
+    `;
+}
+
+function setLoading(state) {
+    authBtn.classList.toggle('loading', state);
+    authBtn.disabled = state;
 }

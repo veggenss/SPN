@@ -14,8 +14,6 @@ class AuthService{
     private function sendVerificationEmail($to, $token): bool
     {
         $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
-        $mail->SMTPDebug = 2;
-        $mail->Debugoutput = 'error_log';
         try{
             $mail->isSMTP();
             $mail->Host = $_ENV['MAIL_HOST'];
@@ -35,7 +33,7 @@ class AuthService{
             $host = $_SERVER['HTTP_HOST'];
             $basePath = dirname($_SERVER['SCRIPT_NAME']);
             
-            $verificationUrl = "$protocol://$host$basePath/verify-mail?token=$token";
+            $verificationUrl = "$protocol://$host$basePath" . "verify-email?token=$token";
     
             $mail->CharSet = 'UTF-8';
             $mail->Body = "
