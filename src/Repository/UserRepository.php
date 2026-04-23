@@ -54,7 +54,7 @@ class UserRepository{
             
             $res->free();
             $stmt->close();
-            return true
+            return true;
         }
         catch(\mysqli_sql_exception $e){
             throw new \Spn\Exceptions\DatabaseException("Failed to findEmailToken: " . $e->getMessage(), 0, $e);

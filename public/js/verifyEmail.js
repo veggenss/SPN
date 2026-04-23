@@ -21,6 +21,13 @@ authBtn.addEventListener('click', () => {
             authBtn.location="/login";
         }
     }
+    else {
+        alertCon.innerHTML = `
+            <div class="error">
+                <p>Ingen Token funnet!</p>
+            </div>
+        `;
+    }
 });
 
 async function verifyEmail(emailToken){
