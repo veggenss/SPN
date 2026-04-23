@@ -14,14 +14,16 @@ class AuthService{
     private function sendVerificationEmail($to, $token): bool
     {
         $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+        $mail->SMTPDebug = 2;
+        $mail->Debugoutput = 'error_log';
         try{
             $mail->isSMTP();
             $mail->Host = $_ENV['MAIL_HOST'];
             $mail->SMTPAuth = true;
             $mail->Username = $_ENV['MAIL_USERNAME'];
             $mail->Password = $_ENV['MAIL_PASSWORD'];
-            $mail->SMTPSecure = $_ENV['MAIL_PORT'];
-            $mail->Port = $_ENV['MAIL_ENCRYPTION'];
+            $mail->SMTPSecure = $_ENV['MAIL_ENCRYPTION'];
+            $mail->Port = $_ENV['MAIL_PORT'];
     
     
             $mail->setFrom($_ENV['MAIL_USERNAME'], 'Samtaler på nett');
@@ -62,7 +64,7 @@ class AuthService{
                     <p style='font-size: 12px; color: #888;'>Hvis du ikke ba om denne e-posten, kan du bare ignorere den.</p>
                 </div>
             ";
-                            
+            
             return $mail->send();
         }
         catch (\PHPMailer\PHPMailer\Exception $e) {
