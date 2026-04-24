@@ -69,6 +69,6 @@ window.currentUser = {
     wsToken: "<?php echo $_SESSION['user']['wsToken']?>"
 }
 </script>
-<script src="/js/wsInit.js"></script>
+<!--<script src="/js/wsInit.js"></script>-->
 <script src="/js/mainScript.js"></script>
 </html>
