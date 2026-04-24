@@ -121,11 +121,10 @@ class AuthController{
         }
     }
     
-    public function handleMailToken(): void
+    public function handleEmailToken(): void
     {
         header('Content-Type: application/json');
         $token = json_decode(file_get_contents('php://input'), true);
-        error_log($token, 0);
         try{
             $this->auth->verifyEmail($token['token']);
             echo json_encode([

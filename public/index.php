@@ -24,12 +24,12 @@ $dispatcher = \FastRoute\simpleDispatcher(function(RouteCollector $r){
     $r->addRoute('GET', '/logout', [UserController::class, 'logout']);
     
     //Page
+    $r->addRoute('POST', '/verify-email', [AuthController::class, 'handleEmailToken']);
     $r->addRoute('GET', '/password-reset', [AuthController::class, 'showPasswordReset']);
     $r->addRoute('GET', '/chat', [ChatController::class, 'showChat']);
     $r->addRoute('GET', '/chat/profile', [UserController::class, 'showProfile']);
     
     //API
-    $r->addRoute('POST', '/api/verify-email', [AuthController::class, 'handleEmailToken']);
     $r->addRoute('POST', '/api/get-user-logs', [ChatController::class, 'getUserLogs']);
     $r->addRoute('POST', '/api/make-conv', [ChatController::class, 'makeConversation']);
     $r->addRoute('POST', '/api/send-message', [ChatController::class, 'sendMessage']);
@@ -43,7 +43,7 @@ $publicRoutes = [
     '/login',
     '/register',
     '/password-reset',
-    '/verify-email'
+    '/verify-email',
 ];
 
 if(!in_array($uri, $publicRoutes)){

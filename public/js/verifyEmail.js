@@ -23,7 +23,7 @@ async function handleAuthClick() {
         if (ok) {
             showAlert('success', 'E-post verifisert!');
             authBtn.textContent = "Trykk her for å logge inn";
-            window.location.href = "/login";
+            setBtnRedirect();
         }
     }
     catch (err) {
@@ -36,7 +36,7 @@ async function handleAuthClick() {
 }
 
 async function verifyEmail(token) {
-    const res = await fetch('/api/verify-email', {
+    const res = await fetch('/verify-email', {
         method: 'POST',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token })
@@ -63,4 +63,10 @@ function showAlert(type, message) {
 function setLoading(state) {
     authBtn.classList.toggle('loading', state);
     authBtn.disabled = state;
+}
+
+function setBtnRedirect() {
+    authBtn.addEventListener('click', () => {
+        window.location.href = '/login';
+    });
 }
