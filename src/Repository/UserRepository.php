@@ -73,7 +73,7 @@ class UserRepository{
 
             $res->free();
             $stmt->close();
-            return $tokenUser;
+            return $user;
         }
         catch(\mysqli_sql_exception $e){
             throw new \Spn\Exceptions\DatabaseException("Failed to findByToken: " . $e->getMessage(), 0, $e);
