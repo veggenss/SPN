@@ -15,7 +15,7 @@ class ChatRepository{
     public function getPublicMessages(): array
     {
         try{
-            $stmt = $this->conn->query('SELECT pm.*, u.username FROM public_messages pm INNER JOIN users u ON pm.sender_id = u.id;');
+            $stmt = $this->conn->query('SELECT pm.*, u.username FROM public_messages pm INNER JOIN users u ON pm.sender_id = u.id ORDER BY date_added ASC;');
             $pm = $stmt->fetch_all(MYSQLI_ASSOC);
             $stmt->free_result();
             return $pm;

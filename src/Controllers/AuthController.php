@@ -48,13 +48,16 @@ class AuthController{
             header('Location: /chat');
             exit;
         }
-        catch(\Spn\Exceptions\InvalException $e){
+        catch(\Spn\Exceptions\AuthException $e){
             $_SESSION['flash'] = [
                 "class" => "error",
                 "message" => $e->getMessage()
             ];
             header('Location: /login');
             exit;
+        }
+        catch(\PHPMailer\PHPMailer\Exception $e){
+            throw new \Exception;
         }
         catch(\Spn\Exceptions\DatabaseException $e){
             error_log($e->getMessage());
@@ -94,7 +97,7 @@ class AuthController{
             header('Location: /register');
             exit;
         }
-        catch(\Spn\Exceptions\InvalException $e){
+        catch(\Spn\Exceptions\AuthException $e){
             $_SESSION['flash'] = [
                 "class" => "error",
                 "message" => $e->getMessage()
@@ -132,7 +135,7 @@ class AuthController{
             ]);
             exit;
         }
-        catch(\Spn\Exceptions\InvalException $e){
+        catch(\Spn\Exceptions\AuthException $e){
             echo json_encode([
                 "class" => "error",
                 "message" => "Something went wrong, uppsie woopsie!"

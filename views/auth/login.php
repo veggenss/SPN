@@ -17,7 +17,7 @@ unset($_SESSION['flash']);
         <h2>Logg inn</h2>
         <p>For å bruke Samtaler på Nett, må du logge inn.</p> <br>
         <?php if($status) echo "<span class=\"" . $status['class'] . "\">" . $status['message'] . "</span>";?>
-        <form method="post" action="/login">
+        <form method="post" action="/api/login">
 
             <div class="form-group">
                 <label>Brukernavn:</label>

@@ -23,7 +23,6 @@ class AuthService{
             $mail->SMTPSecure = $_ENV['MAIL_ENCRYPTION'];
             $mail->Port = $_ENV['MAIL_PORT'];
     
-    
             $mail->setFrom($_ENV['MAIL_USERNAME'], 'Samtaler på nett');
             $mail->addAddress($to);
             $mail->isHTML(true);
@@ -46,7 +45,7 @@ class AuthService{
                     margin: 0 auto;
                     color: #333;
                 '>
-                    <h2 style='color: #2c3e50;'>Hei <strong></strong>,</h2>
+                    <h2 style='color: #2c3e50;'>Hei<strong></strong></h2>
                     <p>Klikk på knappen under for å bekrefte e-posten din:</p>
                     <p style='text-align: center;'>
                         <a href='$verificationUrl' style='
@@ -75,32 +74,34 @@ class AuthService{
     {
         $user = $this->userRepo->findByName($data['username']);
         if(!$user || !password_verify($data['password'], $user['password'])){
-            throw new \Spn\Exceptions\InvalException("Feil brukernavn eller passord");
+            throw new \Spn\Exceptions\AuthException("Feil brukernavn eller passord");
         }
-        
+        if(!$user['email_verify'] != 1){
+            throw new \Spn\Exceptions\AuthException("Du må verifisere Epost!");
+        }
         return $user;
     }
     
     public function register(array $data): bool
     {
         if($this->userRepo->findByName($data['username'])){
-            throw new \Spn\Exceptions\InvalException("Username already exists");
+            throw new \Spn\Exceptions\AuthException("Username already exists");
         }
         
         $data['emailToken'] = bin2hex(random_bytes(32));
         $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
         
         if(!$this->userRepo->save($data)){
-            throw new \Spn\Exceptions\UserException("Kunne ikke registrere!");
+            throw new \Spn\Exceptions\AuthException("Kunne ikke registrere!");
         }
-        
+         
         return $this->sendVerificationEmail($data['email'], $data['emailToken']);
     }
     
     public function verifyEmail(string $token): bool
     {
         if(!$this->userRepo->findEmailToken($token)){
-            throw new \Spn\Exceptions\UserException("Kunne ikke finne token!");
+            throw new \Spn\Exceptions\AuthException("Kunne ikke finne token!");
         }
         return $this->userRepo->verifyEmailByToken($token);
     }

@@ -10,7 +10,7 @@
 <body>
     <div class="auth-con">
         <h2>Tilbakestill Passord</h2><br>
-        <form method="post" action="/password_reset">
+        <form method="post" action="/api/password_reset">
             <div class="form-group">
                 <label>Gammle Passord:</label>
                 <input type="password" name="old-password" required>

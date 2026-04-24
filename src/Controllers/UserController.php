@@ -16,6 +16,11 @@ class UserController{
         require __DIR__ . '/../../views/user/profile.php';
     }
     
+    public function updateProfile(): void
+    {
+        
+    }
+    
     public function logout(): void
     {
         session_destroy();

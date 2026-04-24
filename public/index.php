@@ -12,24 +12,20 @@ $dispatcher = \FastRoute\simpleDispatcher(function(RouteCollector $r){
     //Root
     $r->addRoute('GET', '/', [AuthController::class, 'showLogin']);
     
-    //Auth
-    $r->addRoute('GET', '/login', [AuthController::class, 'showLogin']);
-    $r->addRoute('POST', '/login', [AuthController::class, 'login']);
-    
-    $r->addRoute('GET', '/register', [AuthController::class, 'showRegister']);
-    $r->addRoute('POST', '/register', [AuthController::class, 'register']);
-    
-    $r->addRoute('GET', '/verify-email', [AuthController::class, 'showEmailVerify']);
-    
-    $r->addRoute('GET', '/logout', [UserController::class, 'logout']);
-    
     //Page
-    $r->addRoute('POST', '/verify-email', [AuthController::class, 'handleEmailToken']);
+    $r->addRoute('GET', '/login', [AuthController::class, 'showLogin']);    
+    $r->addRoute('GET', '/register', [AuthController::class, 'showRegister']);
+    $r->addRoute('GET', '/verify-email', [AuthController::class, 'showEmailVerify']);
     $r->addRoute('GET', '/password-reset', [AuthController::class, 'showPasswordReset']);
     $r->addRoute('GET', '/chat', [ChatController::class, 'showChat']);
     $r->addRoute('GET', '/chat/profile', [UserController::class, 'showProfile']);
-    
+    $r->addRoute('GET', '/logout', [UserController::class, 'logout']);
+
     //API
+    $r->addRoute('POST', '/api/login', [AuthController::class, 'login']);
+    $r->addRoute('POST', '/api/register', [AuthController::class, 'register']);
+    $r->addRoute('POST', '/api/verify-email', [AuthController::class, 'handleEmailToken']);
+    
     $r->addRoute('POST', '/api/get-user-logs', [ChatController::class, 'getUserLogs']);
     $r->addRoute('POST', '/api/make-conv', [ChatController::class, 'makeConversation']);
     $r->addRoute('POST', '/api/send-message', [ChatController::class, 'sendMessage']);
