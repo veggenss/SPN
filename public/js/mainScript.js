@@ -19,7 +19,6 @@ const wsToken = window.currentUser.wsToken;
 
 let participant_ids = [];
 let newConvPartyCount = 0;
-let userChatLogs = {}; //Stores all fetched messages
 let activeConvId = null;
 let sending = false;
 let ws = null;
