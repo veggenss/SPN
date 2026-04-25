@@ -324,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (text.length > 400) {
             sending = false;
-            chatStore.addMessage('public', null, {
+            appendMessage({
                 id: 'sys-' + Date.now(),
                 username: "[System]",
                 message: "Meldingen er for lang. Maks 400 tegn.",
@@ -345,7 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ws.send(JSON.stringify(messageData));
         }
         else {
-            chatStore.addMessage('public', null, {
+            appendMessage({
                 id: 'sys-' + Date.now(),
                 username: "[System]",
                 message: "Noe Gikk Galt!",
@@ -366,7 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         ws.onclose = () => {
             console.error("Tilkobling til websocket lukket");
-            chatStore.addMessage('public', null, {
+            appendMessage({
                 id: 'sys-' + Date.now(),
                 username: "[System]",
                 message: "Tilkoblingen ble lukket",
