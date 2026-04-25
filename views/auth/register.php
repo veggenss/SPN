@@ -17,7 +17,7 @@ unset($_SESSION['flash']);
         <h2>Registrering</h2>
         <p>Du må registrere deg for å bruke nettsiden</p>
         <?php if($status) echo "<span class=\"" . $status['class'] . "\">" . $status['message'] . "</span>";?>
-        <form method="post" action="/api/register" class="register-form">
+        <form method="POST" action="/api/register" class="register-form">
 
             <div class="form-group">
                 <label>Brukernavn:</label>

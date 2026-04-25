@@ -76,7 +76,7 @@ class AuthService{
         if(!$user || !password_verify($data['password'], $user['password'])){
             throw new \Spn\Exceptions\AuthException("Feil brukernavn eller passord");
         }
-        if(!$user['email_verify'] != 1){
+        if(!($user['verify_email'] == true)){
             throw new \Spn\Exceptions\AuthException("Du må verifisere Epost!");
         }
         return $user;

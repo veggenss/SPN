@@ -98,7 +98,7 @@ class UserRepository{
     public function save(array $data): bool
     {
         try{
-            $stmt = $this->conn->prepare('INSERT INTO users (username, password, email, verify_email) VALUES (?, ?, ?, ?);');
+            $stmt = $this->conn->prepare('INSERT INTO users (username, password, email, verify_email) VALUES (?, ?, ?, ?)');
             $stmt->bind_param("ssss", $data['username'], $data['password'], $data['email'], $data['emailToken']);
             
             $user = $stmt->execute();

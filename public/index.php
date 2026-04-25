@@ -38,6 +38,8 @@ $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $publicRoutes = [
     '/login',
     '/register',
+    '/api/login',
+    '/api/register',
     '/password-reset',
     '/verify-email',
 ];

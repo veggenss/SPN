@@ -56,9 +56,9 @@ class AuthController{
             header('Location: /login');
             exit;
         }
-        catch(\PHPMailer\PHPMailer\Exception $e){
-            throw new \Exception;
-        }
+        // catch(\PHPMailer\PHPMailer\Exception $e){
+        //     throw new \Exception;
+        // }
         catch(\Spn\Exceptions\DatabaseException $e){
             error_log($e->getMessage());
             $_SESSION['flash'] = [
