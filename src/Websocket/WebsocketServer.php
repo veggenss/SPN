@@ -37,7 +37,6 @@ class WebsocketServer
         $this->server->on('message', function(Server $server, Frame $frame) use ($chatService, $connections)
         {
             $data = json_decode($frame->data, true);
-            print_r($data);
             if(!$data){
                 return;
             }
@@ -46,8 +45,8 @@ class WebsocketServer
             
             $connections->pruneDeadFds($server);
             
-            if(!empty($msg['participants_id']) && count($msg['participants_id']) > 1){
-                foreach($connections->findFdsByUsers($msg['participants_id']) as $fd){
+            if(!empty($msg['participant_ids']) && count($msg['participant_ids']) > 1){
+                foreach($connections->findFdsByUsers($msg['participant_ids']) as $fd){
                     if($server->isEstablished($fd)){
                         $server->push($fd, json_encode($msg));
                     }
@@ -60,6 +59,7 @@ class WebsocketServer
                     }
                 }             
             }
+            print_r($msg);
         });
         
         $this->server->on('Close', fn($server, $fd) => $connections->remove($fd));

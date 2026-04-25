@@ -57,22 +57,22 @@ class ChatService{
         return $this->chatRepo->makeConversation($userIds, $data['title']) ?: false;
     }
     
-    public function sendMessage(array $data): array
+    public function sendMessage(array $msg): array
     {
-        if(empty($data['participants_id']) || count($data['participants_id']) <= 1){
-            if(!$this->chatRepo->savePublicMessage($data)){
-                throw new \Spn\Exceptions\ChatException("Kunne ikke dytte melding!");
+        if(empty($msg['conv_id'])){
+            if(!$this->chatRepo->savePublicMessage($msg)){
+                throw new \Spn\Exceptions\ChatException("Kunne ikke dytte PublicMessage!");
             }
-            $data['conv_id'] = NULL; //for nomalizing returning JSON
-            return $data;
+            return $msg;
         }
         
-        $data['conv_id'] = $this->chatRepo->findConvByParties($data['participants_id']);
+        $msg['participant_ids'] = $this->chatRepo->getConvMembersByConvId($msg['conv_id']);
         
-        if(!$this->chatRepo->savePrivateMessage($data)){
-           throw new \Spn\Exceptions\ChatException("Kunne ikke dytte melding!");
+        if(!$this->chatRepo->savePrivateMessage($msg)){
+           throw new \Spn\Exceptions\ChatException("Kunne ikke dytte PrivateMessage!");
         }
-        return $data; 
+
+        return $msg; 
     }
 
     public function removeMessage(int $id, ?int $convId)

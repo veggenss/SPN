@@ -15,7 +15,7 @@ class ChatRepository{
     public function getPublicMessages(): array
     {
         try{
-            $stmt = $this->conn->query('SELECT pm.*, u.username FROM public_messages pm INNER JOIN users u ON pm.sender_id = u.id ORDER BY date_added ASC;');
+            $stmt = $this->conn->query('SELECT pm.*, u.username FROM public_messages pm INNER JOIN users u ON pm.sender_id = u.id ORDER BY date_added ASC, id ASC;');
             $pm = $stmt->fetch_all(MYSQLI_ASSOC);
             $stmt->free_result();
             return $pm;
@@ -30,7 +30,7 @@ class ChatRepository{
     {
         try{
             $convStmt = $this->conn->prepare('
-                SELECT c.id, c.title, c.date_added AS conv_created, c.latest_message, GROUP_CONCAT(DISTINCT u.username) AS participants, GROUP_CONCAT(DISTINCT u.id) AS participants_id
+                SELECT c.id, c.title, c.date_added AS conv_created, c.latest_message, GROUP_CONCAT(DISTINCT u.username ORDER BY u.username) AS participants, GROUP_CONCAT(DISTINCT u.id ORDER BY u.id) AS participant_ids
                 FROM conversations c
                 JOIN conversation_members cm ON c.id = cm.conversation_id
                 JOIN users u ON cm.user_id = u.id
@@ -49,7 +49,7 @@ class ChatRepository{
                 SELECT pm.*, sender.username AS sender_username FROM private_messages pm
                 JOIN users sender ON pm.sender_id = sender.id
                 WHERE pm.conversation_id IN (SELECT conversation_id FROM conversation_members WHERE user_id = ?)
-                ORDER BY pm.conversation_id, pm.date_sent ASC;
+                ORDER BY pm.conversation_id, pm.date_sent ASC, pm.id ASC;
             ');
             $msgStmt->bind_param("i", $id);
             $msgStmt->execute();
@@ -63,7 +63,7 @@ class ChatRepository{
             
             foreach($conversations as $conv){
                 $conv['participants'] = explode(',', $conv['participants']);
-                $conv['participants_id'] = $conv['participants_id'] 
+                $conv['participant_ids'] = $conv['participant_ids'] 
                     |> (fn($arr) => explode(',', $arr)) 
                     |> (fn($arr) => array_map('intval', $arr));
                 $conv['messages'] = [];
@@ -81,6 +81,36 @@ class ChatRepository{
         catch(\mysqli_sql_exception $e){
             error_log($e->getMessage());
             throw new \Spn\Exceptions\DatabaseException("Get Conversations Failed: " . $e->getMessage(), 0, $e);
+        }
+    }
+    
+    public function getConvMembersByConvId(int $conv_id): array
+    {
+        try{
+            $stmt = $this->conn->prepare('
+                SELECT cm.user_id FROM conversation_members cm
+                JOIN conversations c ON cm.conversation_id = c.id
+                WHERE c.id = ?;
+            ');
+            $stmt->bind_param("i", $conv_id);
+            $stmt->execute();
+            
+            $stmtRes = $stmt->get_result();
+            $stmt->close();
+            
+            $participants = [];
+            
+            while($row = $stmtRes->fetch_column()){
+                $participants[] = $row;
+            }
+            
+            $stmtRes->free();
+            
+            return $participants;
+        }
+        catch(\mysqli_sql_exception $e){
+            error_log($e->getMessage());
+            throw new \Spn\Exceptions\DatabaseException("Get ConvMembersByConvID Failed: " . $e->getMessage(), 0, $e);
         }
     }
     
@@ -116,35 +146,6 @@ class ChatRepository{
             $this->conn->rollback();
             error_log($e->getMessage());
             throw new \Spn\Exceptions\DatabaseException("makeConversation Failed: " . $e->getMessage(), 0, $e);
-        }
-    }
-    
-    public function findConvByParties(array $userIds): mixed
-    {
-        $numUsers = count($userIds);
-        if ($numUsers < 2 || $numUsers > 10) {
-            throw new \Spn\Exceptions\InvalException("Participants must be between 2 and 10.");
-        }
-    
-        $placeholders = implode(',', array_fill(0, $numUsers, '?'));
-        $sql = "
-            SELECT cm.conversation_id
-            FROM conversation_members cm
-            GROUP BY cm.conversation_id
-            HAVING COUNT(*) = ? AND SUM(cm.user_id IN ($placeholders)) = ?
-            LIMIT 1;
-        ";
-        
-        try {
-            $stmt = $this->conn->prepare($sql);
-            $types = str_repeat('i', $numUsers + 2);
-            $params = array_merge([$numUsers], $userIds, [$numUsers]);
-            $stmt->bind_param($types, ...$params);
-            $stmt->execute();
-            $result = $stmt->get_result()->fetch_assoc();
-            return $result['conversation_id'] ?? null;
-        } catch (\mysqli_sql_exception $e) {
-            throw new \Spn\Exceptions\DatabaseException("findConvByParties Failed: " . $e->getMessage(), 0, $e);
         }
     }
     

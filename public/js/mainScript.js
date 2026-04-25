@@ -17,7 +17,7 @@ const username = window.currentUser.username;
 const wsToken = window.currentUser.wsToken;
 // const currentProfilePictureUrl = window.currentProfilePictureUrl;
 
-let participants_id = [];
+let participant_ids = [];
 let newConvPartyCount = 0;
 let userChatLogs = {}; //Stores all fetched messages
 let activeConvId = null;
@@ -27,6 +27,100 @@ let ws = null;
 console.log(userId, username);
 
 const getNewConvPartyCount = () => newConvPartyInput.querySelectorAll('.participant:not(.self)').length;
+
+const chatStore = {
+    public: [],
+    private: {},
+    
+    upsertMessages(type, convId, msgs){
+        if(type === 'public'){
+            this.public = this.merge(this.public, msgs);
+        }
+        else{
+            if(!convId) throw new TypeError("Undefined convId");
+            this.private[convId] = this.merge(this.private[convId], msgs);
+        }
+    },
+    
+    addMessage(type, convId, msg){
+        if(!msg) throw new TypeError("Undefined msg");
+        
+        if(type === 'public'){
+            this.public = this.insertSorted(this.public, msg);
+            return;
+        }
+
+        if(!convId) throw new TypeError("Undefined ConvId");
+        
+        if(!this.private[convId]) this.private[convId] = [];
+        
+        this.private[convId] = this.insertSorted(this.private[convId], msg);
+    },
+    
+    merge(existing = [], incoming = []){
+        const map = new Map();
+        
+        [...existing, ...incoming].forEach(msg => {
+            map.set(msg.id, msg);
+        });
+        
+        return this.sort([...map.values()]);
+    },
+    
+    insertSorted(arr, msg){
+        const newArr = [...arr, msg];
+        return this.sort(newArr);
+    },
+    
+    sort(arr){
+        return [...arr].sort((a, b) => {
+            if(a.date_added === b.date_added){
+                return Number(a.id) - Number(b.id);
+            }
+            return new Date(a.date_added || a.date_sent) - new Date(b.date_added || b.date_sent);
+        });
+    }
+};
+
+function appendMessage(data) {
+    const wrapper = document.createElement('div');
+    wrapper.classList.add('message');
+
+    if (data.sender_id == userId) {
+        wrapper.classList.add('self');
+    }
+    
+    if (data.username === "[System]") {
+        wrapper.classList.add('system');
+        wrapper.textContent = data.message || '';
+        messagesDiv.appendChild(wrapper);
+        return;
+    }
+    
+    const avatar = document.createElement('img');
+    avatar.classList.add('avatar');
+    avatar.src = data.profilePictureUrl || '/assets/icons/default.png';
+
+    const content = document.createElement('div');
+    content.classList.add('message-content');
+
+    const usernameSpan = document.createElement('span');
+    usernameSpan.classList.add('username');
+    usernameSpan.textContent = data.username || data.sender_username || 'Ukjent';
+
+    const textDiv = document.createElement('div');
+    textDiv.classList.add('text');
+    textDiv.textContent = data.message || data[0];
+    
+    content.appendChild(usernameSpan);
+    content.appendChild(textDiv);
+
+    wrapper.appendChild(avatar);
+    wrapper.appendChild(content);
+
+    messagesDiv.appendChild(wrapper);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     function init() {
@@ -49,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
         globalChat.addEventListener('click', () => {
             activeConvId = null;
             messagesDiv.innerHTML = '';
-            renderUserChatLog();
+            renderMessages();
             
             document.querySelectorAll('.conversation, #global-chat')
                 .forEach(el => el.classList.remove('active'));
@@ -113,15 +207,6 @@ document.addEventListener('DOMContentLoaded', () => {
             newConvPartyInput.appendChild(wrapper);
             newConvPartyCount++;
         });
-                
-        convWrapper.addEventListener('click', () => {
-            renderUserChatLog(data.id, data.participants_id);
-            activeConvId = data.id;
-        
-            document.querySelectorAll('.conversation, #global-chat').forEach(el => el.classList.remove('active'));
-        
-            convWrapper.classList.add('active');
-        });
     }
 
     async function getUserLogs() {
@@ -130,17 +215,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await req.json();
             if(data) console.log("Fetched!", data);
             
-            userChatLogs.public = data.public;
-            renderUserChatLog();
+            chatStore.upsertMessages('public', null, data.public);
             
-            if(data.conversations.length > 0){
-                userChatLogs.private = {}
-                data.conversations.forEach(conv => {
-                    userChatLogs.private[conv.id] = conv.messages;
-                    renderConversationList(conv);
-                });
-            }
-            console.log(userChatLogs);
+            data.conversations.forEach(conv => {
+                chatStore.upsertMessages('private', conv.id, conv.messages);
+                renderConversationList(conv);
+            });
+            
+            renderMessages();
+            console.log("public: ", chatStore.public, "\n", "private: ", chatStore.private);
         }
         catch(err){
             console.error('Failed to getChat ', err);
@@ -174,44 +257,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    function appendMessage(data) {
-        const wrapper = document.createElement('div');
-        wrapper.classList.add('message');
-    
-        if (data.sender_id == userId) {
-            wrapper.classList.add('self');
+    function renderMessages(){
+        messagesDiv.innerHTML = '';
+        
+        let messages;
+        if(activeConvId){
+            messages = chatStore.private[activeConvId] || [];
+        }
+        else{
+            messages = chatStore.public;
         }
         
-        if (data.username === "[System]") {
-            wrapper.classList.add('system');
-            wrapper.textContent = data.message || '';
-            messagesDiv.appendChild(wrapper);
-            return;
-        }
-        
-        const avatar = document.createElement('img');
-        avatar.classList.add('avatar');
-        avatar.src = data.profilePictureUrl || '/assets/icons/default.png';
-    
-        const content = document.createElement('div');
-        content.classList.add('message-content');
-    
-        const usernameSpan = document.createElement('span');
-        usernameSpan.classList.add('username');
-        usernameSpan.textContent = data.username || data.sender_username || 'Ukjent';
-    
-        const textDiv = document.createElement('div');
-        textDiv.classList.add('text');
-        textDiv.textContent = data.message || data[0];
-        
-        content.appendChild(usernameSpan);
-        content.appendChild(textDiv);
-
-        wrapper.appendChild(avatar);
-        wrapper.appendChild(content);
-
-        messagesDiv.appendChild(wrapper);
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        messages.forEach(msg => appendMessage(msg));
     }
     
     function renderConversationList(data) {
@@ -247,22 +304,11 @@ document.addEventListener('DOMContentLoaded', () => {
         convWrapper.appendChild(userWrapper);
 
         convWrapper.addEventListener('click', () => {
-            renderUserChatLog(data.id, data.participants_id);
             activeConvId = data.id;
+            renderMessages();
         });
 
         convList.appendChild(convWrapper);
-    }
-    
-    function renderUserChatLog(convId, parties) {
-        messagesDiv.innerHTML = '';
-        if(!(convId || parties)){
-            participants_id = [];
-            userChatLogs.public.forEach(msg => appendMessage(msg));
-            return;
-        }
-        participants_id = parties;
-        userChatLogs.private[convId].forEach(msg => appendMessage(msg));
     }
     
     function sendMessage() {
@@ -278,9 +324,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (text.length > 400) {
             sending = false;
-            appendMessage({
+            chatStore.addMessage('public', null, {
+                id: 'sys-' + Date.now(),
                 username: "[System]",
-                message: "Meldingen er for lang. Maks 400 tegn."
+                message: "Meldingen er for lang. Maks 400 tegn.",
+                date_added: new Date().toISOString()
             });
             return;
         }
@@ -288,7 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const messageData = {
             username: username,
             sender_id: userId,
-            participants_id: participants_id,
+            conv_id: activeConvId,
             message: text,
             // profilePictureUrl: currentProfilePictureUrl,
         }
@@ -297,10 +345,12 @@ document.addEventListener('DOMContentLoaded', () => {
             ws.send(JSON.stringify(messageData));
         }
         else {
-            appendMessage({ 
-                    username: "[System]",
-                    message: "Noe Gikk Galt!"
-                });
+            chatStore.addMessage('public', null, {
+                id: 'sys-' + Date.now(),
+                username: "[System]",
+                message: "Noe Gikk Galt!",
+                date_added: new Date().toISOString()
+            });
         }
 
         input.value = '';
@@ -313,40 +363,32 @@ document.addEventListener('DOMContentLoaded', () => {
         ws.onopen = () => {
             console.log("Tilkobling til websocket åpnet");
         }
-    
+
         ws.onclose = () => {
-            console.log("Tilkobling til websocket lukket");
-            appendMessage({ 
-                    username: "[System]",
-                    message: "Tilkoblingen ble lukket"
-                });
+            console.error("Tilkobling til websocket lukket");
+            chatStore.addMessage('public', null, {
+                id: 'sys-' + Date.now(),
+                username: "[System]",
+                message: "Tilkoblingen ble lukket",
+                date_added: new Date().toISOString()
+            });
         }
     
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
             console.log("Incoming:", data);
         
-            const isGlobalMsg = data.participants_id.length === 0;
+            const isGlobalMsg = data.conv_id === null;
 
             if (isGlobalMsg) {
-                if (!userChatLogs.public) userChatLogs.public = [];
-                userChatLogs.public.push(data);
-            } 
-            else {
-                if (!userChatLogs.private){
-                    userChatLogs.private = {};
-                }
-                
-                if (!userChatLogs.private[data.conv_id]) {
-                    userChatLogs.private[data.conv_id] = [];
-                }
-        
-                userChatLogs.private[data.conv_id].push(data);
+                chatStore.addMessage('public', null, data);
+            }
+            else{
+                chatStore.addMessage('private', data.conv_id, data);
             }
             
-            if (data.conv_id === activeConvId) {
-                appendMessage(data);
-                return;
+            if((!data.conv_id && !activeConvId) || data.conv_id === activeConvId){
+                renderMessages();
             }
         }
     }
