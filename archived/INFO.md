@@ -1,1 +1,0 @@
-Denne mappen skal slettes, jeg bare beholder de for nå, i tilfellet koden inni service filene er nytting.

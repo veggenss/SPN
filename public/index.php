@@ -8,7 +8,7 @@ use Spn\Controllers\AuthController;
 use Spn\Controllers\ChatController;
 use Spn\Controllers\UserController;
 
-$dispatcher = \FastRoute\simpleDispatcher(function(RouteCollector $r){
+$dispatcher = FastRoute\simpleDispatcher(function(RouteCollector $r){
     //Root
     $r->addRoute('GET', '/', [AuthController::class, 'showLogin']);
     
