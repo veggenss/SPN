@@ -2,31 +2,82 @@ const alertCon = document.getElementById('alert-container');
 const messagesDiv = document.getElementById('messages');
 const input = document.getElementById('messageInput');
 const sendButton = document.getElementById('sendButton');
-
-const newConvOpen = document.getElementById('new-conv');
-const newConvDialog = document.getElementById('create-conversation');
-const newConvForm = document.getElementById('newConvForm');
+ 
 const newConvPartyInput = document.getElementById('newConvParticipants');
 const newConvPartyAdd = document.getElementById('addParticipantBtn');
-
+ 
 const convList = document.getElementById('conv-list');
 const globalChat = document.getElementById('global-chat');
-
+ 
 const userId = window.currentUser.id;
 const username = window.currentUser.username;
 const wsToken = window.currentUser.wsToken;
-// const currentProfilePictureUrl = window.currentProfilePictureUrl;
-
-let participant_ids = [];
-let newConvPartyCount = 0;
+ 
 let activeConvId = null;
 let sending = false;
 let ws = null;
-
 console.log(userId, username);
 
 const getNewConvPartyCount = () => newConvPartyInput.querySelectorAll('.participant:not(.self)').length;
 
+
+//dialog methods
+function showDialogError(dialog, message) {
+    const el = dialog.querySelector('.dialog-error');
+    if (!el) return;
+    el.querySelector('p').textContent = message;
+    el.hidden = false;
+}
+ 
+function clearDialogError(dialog) {
+    const el = dialog.querySelector('.dialog-error');
+    if(!el) return;
+    el.hidden = true;
+}
+
+function setupDialog(dialogId, openBtnId, formId, onOpen, onSubmit) {
+    const dialog = document.getElementById(dialogId);
+    const form = document.getElementById(formId);
+    const openBtn = document.getElementById(openBtnId);
+ 
+    if(!dialog || !form) {
+        console.warn(`setupDialog: undefined: "${dialogId}"`);
+        return;
+    }
+ 
+    openBtn?.addEventListener('click', () => {
+        form.reset();
+        clearDialogError(dialog);
+        onOpen?.(dialog, form);
+        dialog.showModal();
+    });
+
+    dialog.addEventListener('click', (e) => {
+        if(e.target === dialog) dialog.close();
+    });
+
+    dialog.querySelector('.dialog-close')?.addEventListener('click', () => dialog.close());
+    dialog.querySelector('.dialog-cancel')?.addEventListener('click', () => dialog.close());
+
+    const fileInput = dialog.querySelector('input[type="file"]');
+    const preview = dialog.querySelector('.profile-avatar-preview');
+    if(fileInput && preview) {
+        fileInput.addEventListener('change', () => {
+            const file = fileInput.files[0];
+            if(file) preview.src = URL.createObjectURL(file);
+        });
+    }
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearDialogError(dialog);
+        const data = Object.fromEntries(new FormData(form));
+        await onSubmit(data, dialog, form);
+    });
+}
+
+
+//chatStore
 const chatStore = {
     public: [],
     private: {},
@@ -81,6 +132,8 @@ const chatStore = {
     }
 };
 
+
+//message styling
 function appendMessage(data) {
     const wrapper = document.createElement('div');
     wrapper.classList.add('message');
@@ -111,9 +164,14 @@ function appendMessage(data) {
     textDiv.classList.add('text');
     textDiv.textContent = data.message || data[0];
     
+    const time = document.createElement('span');
+    time.classList.add('timestamp');
+    time.textContent = new Date(data.date_added || data.date_sent).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
     content.appendChild(usernameSpan);
     content.appendChild(textDiv);
-
+    content.appendChild(time);
+    
     wrapper.appendChild(avatar);
     wrapper.appendChild(content);
 
@@ -121,13 +179,74 @@ function appendMessage(data) {
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
 
+
+
 document.addEventListener('DOMContentLoaded', () => {
     function init() {
         websocketConn();
         getUserLogs();
         setupEventListeners();
+        setupDialogs();
     }
+    
+    
+    //setup dialog
+    function setupDialogs() {
+        setupDialog(
+            'create-conversation',
+            'new-conv',
+            'new-conversation-form',
+            (dialog, form) => {
+                newConvPartyInput.innerHTML = `
+                    <div class="participant self">
+                        <input type="text" value="${username}" disabled>
+                    </div>
+                `;
+            },
 
+            async (data, dialog, form) => {
+                const participants = [...newConvPartyInput.querySelectorAll('input')]
+                    .filter(i => !i.disabled)
+                    .map(i => i.value.trim())
+                    .filter(Boolean);
+ 
+                if (participants.length < 1) {
+                    showDialogError(dialog, "Legg til minst én deltaker.");
+                    return;
+                }
+ 
+                const ok = await makeConversation(data.convName, participants);
+                if (ok) dialog.close();
+            }
+        );
+
+        setupDialog(
+            'my-profile',
+            'open-profile',
+            'my-profile-form',
+            null,
+            async (data, dialog, form) => {
+                const ok = await saveProfile(data);
+                if (ok) dialog.close();
+            }
+        );
+ 
+        newConvPartyAdd.addEventListener('click', () => {
+            if (getNewConvPartyCount() >= 9) return;
+ 
+            const wrapper = document.createElement('div');
+            wrapper.classList.add('participant');
+            wrapper.innerHTML = `
+                <input type="text" placeholder="Brukernavn" required>
+                <button type="button" class="remove"><i class="fa-solid fa-xmark"></i></button>
+            `;
+            wrapper.querySelector('.remove').onclick = () => wrapper.remove();
+            newConvPartyInput.appendChild(wrapper);
+        });
+    }
+    
+    
+    //event listeners
     function setupEventListeners() {
         sendButton.onclick = sendMessage;
 
@@ -144,70 +263,13 @@ document.addEventListener('DOMContentLoaded', () => {
             messagesDiv.innerHTML = '';
             renderMessages();
             
-            document.querySelectorAll('.conversation, #global-chat')
-                .forEach(el => el.classList.remove('active'));
-        
+            document.querySelectorAll('.conversation, #global-chat').forEach(el => el.classList.remove('active'));
             globalChat.classList.add('active');
-        });
-
-        // open newConvDialouge
-        newConvOpen.addEventListener('click', () => {
-            newConvPartyInput.innerHTML = `
-                <div class="participant self">
-                    <input type="text" value="${username}" disabled>
-                </div>
-            `; 
-        });
-        
-        // close newConvDialogue
-        newConvDialog.addEventListener('close', () => {
-            newConvForm.reset();
-            newConvPartyCount = 0;
-        });
-        
-        // submit newConvDialogue
-        newConvForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            
-            const convName = document.getElementById('convName').value;
-            
-            const participants = [...newConvPartyInput.querySelectorAll('input')]
-                .filter(input => !input.disabled)
-                .map(input => input.value.trim())
-                .filter(Boolean);
-            
-            if (participants.length < 1) return;
-            
-            console.log("NewConvFormData \n", "convName: ", convName, "\n", "Parties: ", participants);
-            
-            makeConversation(convName, participants);
-            
-            newConvForm.reset();
-            newConvPartyCount = 0;
-        });
-        
-        // add/remove conv participants
-        newConvPartyAdd.addEventListener('click', () => {
-            if (getNewConvPartyCount() >= 9) return;
-            
-            const wrapper = document.createElement("div");
-            wrapper.classList.add("participant");
-        
-            wrapper.innerHTML = `
-                <input type="text" placeholder="Brukernavn" required>
-                <button type="button" class="remove">X</button>
-            `;
-        
-            wrapper.querySelector(".remove").onclick = () => {
-                wrapper.remove();
-                newConvPartyCount--;
-            };
-        
-            newConvPartyInput.appendChild(wrapper);
-            newConvPartyCount++;
         });
     }
 
+    
+    //api calls
     async function getUserLogs() {
         try {
             const req = await fetch('/api/get-user-logs', {method: 'POST'});
@@ -239,34 +301,49 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await req.json();
             
             if (data.class) {
-                alertCon.innerHTML = `
-                    <div class="${data.class}">
-                        <p>${data.message}</p>
-                    </div>
-                 `;
-                return
+                const dialog = document.getElementById('create-conversation');
+                showDialogError(dialog, data.message);
+                return false;
             }
             
-            if(data.conversation){
-                getUserLogs();
-            } 
+            if(data.conversation) getUserLogs();
+            return true;
         }
         catch(err){
-            console.error('newConversation(); ', err)
+            console.error('newConversation: ', err);
+            return false;
         }
     }
     
+    async function saveProfile(){
+        try{
+            const formData = new FormData();
+            Object.entries(data).forEach(([k, v]) => formData.append(k, v));
+            
+            const fileInput = document.getElementById('profile_picture');
+            if(fileInput[0]) formData.append('profile_picture', fileInput.files[0]);
+            
+            const req = await fetch('/api/save-prifile', { method: 'POST', body: formData });
+            const res = await req.json();
+            
+            if(res.class === "error"){
+                const dialog = documetn.getElementById('my-profile');
+                showDialogError(dialog, res.message);
+                return false;
+            }
+            return true;
+        }
+        catch(err){
+            console.error("saveProfile: ", err);
+            return false;
+        }
+    }
+    
+    
+    //rendering
     function renderMessages(){
         messagesDiv.innerHTML = '';
-        
-        let messages;
-        if(activeConvId){
-            messages = chatStore.private[activeConvId] || [];
-        }
-        else{
-            messages = chatStore.public;
-        }
-        
+        const messages = activeConvId ? (chatStore.private[activeConvId] || []) : chatStore.public;
         messages.forEach(msg => appendMessage(msg));
     }
     
@@ -286,7 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const username = document.createElement('span');
         username.classList.add('conversation-name');
-        username.textContent = data.title || data.participants[0]; //should be data.title
+        username.textContent = data.title;
 
         const prevStr = document.createElement('span');
         prevStr.classList.add('conversation-prevStr');
@@ -310,6 +387,8 @@ document.addEventListener('DOMContentLoaded', () => {
         convList.appendChild(convWrapper);
     }
     
+    
+    //messaging
     function sendMessage() {
         console.log("Sendt melding (sendMessage())");
         if (sending) return;
@@ -356,6 +435,8 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => { sending = false; }, 1000);
     }
     
+    
+    //websocket connection
     function websocketConn() {
         ws = new WebSocket(`ws://127.0.0.1:9501?token=${wsToken}`);
         console.log("token: ", wsToken);

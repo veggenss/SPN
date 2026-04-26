@@ -17,36 +17,18 @@
          <h4>General</h4>
          <div class="top-buttons">
              <button id="global-chat"><i class="fa-regular fa-message"></i> Global</button>
-             <button onclick="window.location.href='/chat/profile';"><i class="fa-regular fa-user"></i> Min Profil</button>
+             <button id="open-profile"><i class="fa-regular fa-user"></i> Min Profil</button>
              <button onclick="window.location.href='/chat/friends';"><i class="fa-regular fa-face-smile"></i> Venner</button>
          </div>
      
          <div class="separator"></div>
          
          <h4>Dine Samtaler</h4>
-         <button command="show-modal" commandfor="create-conversation" id="new-conv" class="new-conv-button"><i class="fa-solid fa-plus"></i> Ny Samtale</button>
-         <dialog id="create-conversation" closeby="any">
-             <form id="newConvForm" method="POST">
-                <h2>Ny Samtale</h2>
-                <label>Samtale Navn</label>
-                <input type="text" id="convName" placeholder="Navn på samtale" required>
-                
-                <label>Deltakere</label>
-                <button type="button" id="addParticipantBtn">Legg til Deltaker</button>
-             
-                <div id="newConvParticipants"></div>
-                
-                <div class="actions">
-                   <button type="button" commandfor="create-conversation" command="close">Avbryt</button>
-                   <button type="submit">Opprett</button>
-                </div>
-             </form>
-         </dialog>
+         <button id="new-conv" class="new-conv-button"><i class="fa-solid fa-plus"></i> Ny Samtale</button>
      
          <div id="conv-list"></div>
       </div>
-
-
+ 
       <div class="chat">
           <div id="alert-container"></div>
           <div id="messages"></div>
@@ -61,7 +43,80 @@
           <p>Velg en samtale for å se informasjon.</p>
       </div>
    </div>
+   
+   <!-- Dialog: Ny Samtale -->
+   <dialog id="create-conversation">
+      <div class="dialog-inner">
+         <div class="dialog-header">
+            <h2>Ny Samtale</h2>
+            <button class="dialog-close" type="button" aria-label="Lukk"><i class="fa-solid fa-xmark"></i></button>
+         </div>
+         
+         <form id="new-conversation-form">
+            <div class="dialog-error" hidden><p></p></div>
+ 
+            <div class="form-group">
+               <label for="convName">Samtale Navn</label>
+               <input type="text" id="convName" name="convName" placeholder="Navn på samtale" required>
+            </div>
+ 
+            <div class="form-group">
+               <label>Deltakere</label>
+               <div id="newConvParticipants"></div>
+               <button type="button" id="addParticipantBtn"><i class="fa-solid fa-plus"></i> Legg til Deltaker</button>
+            </div>
+            
+            <div class="dialog-actions">
+               <button type="button" class="btn-ghost dialog-cancel">Avbryt</button>
+               <button type="submit">Opprett</button>
+            </div>
+          </form>
+      </div>
+   </dialog>
+   
+   <!-- Dialog: Min Profil -->
+   <dialog id="my-profile">
+      <div class="dialog-inner">
+         <div class="dialog-header">
+            <h2>Min Profil</h2>
+            <button class="dialog-close" type="button" aria-label="Lukk"><i class="fa-solid fa-xmark"></i></button>
+         </div>
+         
+         <form id="my-profile-form">
+            <div class="dialog-error" hidden><p></p></div>
+ 
+            <div class="profile-avatar-row">
+               <img src="/assets/icons/default.png" class="profile-avatar-preview" alt="Profilbilde">
+               <div>
+                  <label for="profile_picture" class="btn-upload">Endre bilde</label>
+                  <input type="file" name="profile_picture" id="profile_picture" accept="image/*" hidden>
+               </div>
+            </div>
+ 
+            <div class="form-group">
+               <label for="prof-username">Brukernavn</label>
+               <input type="text" id="prof-username" name="username"
+                  placeholder="<?php echo htmlspecialchars($_SESSION['user']['username']); ?>"
+                  value="<?php echo htmlspecialchars($_SESSION['user']['username']); ?>">
+            </div>
+ 
+            <div class="form-group">
+               <label for="prof-email">E-post</label>
+               <input type="email" id="prof-email" name="email"
+                  placeholder="<?php echo htmlspecialchars($_SESSION['user']['email']); ?>"
+                  value="<?php echo htmlspecialchars($_SESSION['user']['email']); ?>">
+            </div>
+ 
+            <div class="dialog-actions">
+               <button type="button" class="btn-ghost dialog-cancel">Avbryt</button>
+               <button type="submit">Lagre</button>
+            </div>
+         </form>
+      </div>
+   </dialog>
+ 
 </body>
+
 <script>
 window.currentUser = {
     id: "<?php echo $_SESSION['user']['id']?>",
