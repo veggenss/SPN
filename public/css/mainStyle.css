@@ -217,7 +217,6 @@ html, body {
     display: grid;
     grid-auto-rows: max-content;
     row-gap: 6px;
-    scroll-behavior: smooth;
 }
 
 
