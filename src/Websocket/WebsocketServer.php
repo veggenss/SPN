@@ -41,30 +41,55 @@ class WebsocketServer
                 return;
             }
             
-            $msg = $chatService->sendMessage($data);
-            
-            $connections->pruneDeadFds($server);
-            
-            if(!empty($msg['participant_ids']) && count($msg['participant_ids']) > 1){
-                foreach($connections->findFdsByUsers($msg['participant_ids']) as $fd){
-                    if($server->isEstablished($fd)){
-                        $server->push($fd, json_encode($msg));
-                    }
-                } 
+            switch($data['type']){
+                case 'message': $this->handleMessage($server, $frame, $data, $chatService, $connections); break;
+                case 'delete': $this->handleDelete($server, $frame, $data, $chatService, $connections); break;
+                default: break;
             }
-            else{
-                foreach($connections->allFds() as $fd){
-                    if($server->isEstablished($fd)){
-                        $server->push($fd, json_encode($msg));
-                    }
-                }             
-            }
-            print_r($msg);
         });
         
         $this->server->on('Close', fn($server, $fd) => $connections->remove($fd));
         
         $this->server->on('Disconnect', fn($server, $fd) => $connections->remove($fd));
+    }
+    
+    private function handleMessage(Server $server, Frame $frame, array $data, ChatService $chatService, ConnectionManager $connections): void
+    {
+        $msg = $chatService->sendMessage($data);
+        $connections->pruneDeadFds($server);
+        $this->broadcast($server, $connections, $msg);
+    }
+    
+    private function handleDelete(Server $server, Frame $frame, array $data, ChatService $chatService, ConnectionManager $connections): void
+    {
+        $senderId = $connections->getUserIdByFd($frame->fd);
+        if(!$senderId) return;
+ 
+        $deleted = $chatService->removeMessage($data['message_id'], $senderId, $data['conv_id'] ?? null);
+        if(!$deleted) return;
+        
+        $payload = json_encode([
+           'type' => 'delete',
+           'message_id' => $data['message_id'],
+           'conv_id' => $data['conv_id'] ?? null
+        ]);
+        
+        $this->broadcast($server, $connections, $payload, $deleted['participant_ids'] ?? null);
+    }
+    
+    private function broadcast(Server $server, ConnectionManager $connections, mixed $payload, ?array $participantIds = null): void
+    {   
+        $encoded = is_string($payload) ? $payload : json_encode($payload);
+        $fds = $participantIds ? $connections->findFdsByUsers($participantIds) : $connections->allFds();
+        $connections->pruneDeadFds($server);
+        
+        foreach($fds as $fd){
+            if($server->isEstablished($fd)){
+                $server->push($fd, $encoded);
+            }
+        }             
+        print_r($payload);
+        print_r("\n");
     }
     
     public function start(): void

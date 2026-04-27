@@ -25,7 +25,7 @@ class ConnectionManager
         $this->table->del($fd);
     }
     
-    public function getUserId(int $fd): ?int
+    public function getUserIdByFd(int $fd): ?int
     {
         $row = $this->table->get($fd);
         return $row['user_id'] ?? null;

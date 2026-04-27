@@ -9,6 +9,10 @@ const newConvPartyAdd = document.getElementById('addParticipantBtn');
 const convList = document.getElementById('conv-list');
 const globalChat = document.getElementById('global-chat');
  
+const ctxMenu = document.getElementById('msg-ctx-menu');
+const ctxDelete = document.getElementById('ctx-delete');
+let ctxTargetMsgId = null;
+
 const userId = window.currentUser.id;
 const username = window.currentUser.username;
 const wsToken = window.currentUser.wsToken;
@@ -76,6 +80,18 @@ function setupDialog(dialogId, openBtnId, formId, onOpen, onSubmit) {
     });
 }
 
+//context menus
+function showContextMenu(x, y, msgId) {
+    ctxTargetMsgId = msgId;
+    ctxMenu.style.left = x + 'px';
+    ctxMenu.style.top = y + 'px';
+    ctxMenu.hidden = false;
+}
+
+function hideContextMenu() {
+    ctxMenu.hidden = true;
+    ctxTargetMsgId = null;
+}
 
 //chatStore
 const chatStore = {
@@ -107,6 +123,16 @@ const chatStore = {
         this.private[convId] = this.insertSorted(this.private[convId], msg);
     },
     
+    removeMessage(msgId, convId){
+        const filter = arr => arr.filter(m => m.id != msgId);
+        if(!convId){
+            this.public = filter(this.public);
+        }
+        else{
+            if(this.private[convId]) this.private[convId] = filter(this.private[convId]);
+        }
+    },
+    
     merge(existing = [], incoming = []){
         const map = new Map();
         
@@ -127,7 +153,7 @@ const chatStore = {
             if(a.date_added === b.date_added){
                 return Number(a.id) - Number(b.id);
             }
-            return new Date(a.date_added || a.date_sent) - new Date(b.date_added || b.date_sent);
+            return new Date(a.date_sent) - new Date(b.date_sent);
         });
     }
 };
@@ -137,7 +163,8 @@ const chatStore = {
 function appendMessage(data) {
     const wrapper = document.createElement('div');
     wrapper.classList.add('message');
-
+    wrapper.dataset.msgId = data.id;
+    
     if (data.sender_id == userId) {
         wrapper.classList.add('self');
     }
@@ -166,7 +193,7 @@ function appendMessage(data) {
     
     const time = document.createElement('span');
     time.classList.add('timestamp');
-    time.textContent = new Date(data.date_added || data.date_sent).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    time.textContent = new Date(data.date_sent).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
     content.appendChild(usernameSpan);
     content.appendChild(textDiv);
@@ -250,6 +277,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function setupEventListeners() {
         sendButton.onclick = sendMessage;
 
+        document.addEventListener('click', hideContextMenu);
+        
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -266,6 +295,18 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.conversation, #global-chat').forEach(el => el.classList.remove('active'));
             globalChat.classList.add('active');
         });
+        
+        messagesDiv.addEventListener('contextmenu', (e) => {
+           const bubble = e.target.closest('.message.self');
+           if(!bubble) return;
+           e.preventDefault();
+           showContextMenu(e.clientX, e.clientY, bubble.dataset.msgId);
+        });
+        
+        ctxDelete.addEventListener('click', () => {
+            if(ctxTargetMsgId) deleteMessage(ctxTargetMsgId, activeConvId);
+            hideContextMenu();
+        })
     }
 
     
@@ -324,11 +365,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if(fileInput[0]) formData.append('profile_picture', fileInput.files[0]);
             
             const req = await fetch('/api/save-prifile', { method: 'POST', body: formData });
-            const res = await req.json();
+            const data = await req.json();
             
-            if(res.class === "error"){
+            if(data.class === "error"){
                 const dialog = documetn.getElementById('my-profile');
-                showDialogError(dialog, res.message);
+                showDialogError(dialog, data.message);
                 return false;
             }
             return true;
@@ -338,7 +379,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return false;
         }
     }
-    
     
     //rendering
     function renderMessages(){
@@ -390,7 +430,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     //messaging
     function sendMessage() {
-        console.log("Sendt melding (sendMessage())");
         if (sending) return;
         sending = true;
 
@@ -410,17 +449,15 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             return;
         }
-
-        const messageData = {
-            username: username,
-            sender_id: userId,
-            conv_id: activeConvId,
-            message: text,
-            // profilePictureUrl: currentProfilePictureUrl,
-        }
-
+        
         if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify(messageData));
+            ws.send(JSON.stringify({
+                type: 'message',
+                username: username,
+                sender_id: userId,
+                conv_id: activeConvId,
+                message: text,
+            }));
         }
         else {
             appendMessage({
@@ -435,6 +472,15 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => { sending = false; }, 1000);
     }
     
+    function deleteMessage(msgId){
+        if(ws.readyState !== WebSocket.OPEN) return;
+        
+        ws.send(JSON.stringify({
+            type: 'delete',
+            message_id: msgId,
+            conv_id: activeConvId
+        }));
+    }
     
     //websocket connection
     function websocketConn() {
@@ -457,9 +503,15 @@ document.addEventListener('DOMContentLoaded', () => {
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
             console.log("Incoming:", data);
-        
+            
+            if(data.type === 'delete'){
+                chatStore.removeMessage(data.message_id, data.conv_id);
+                document.querySelector(`[data-msg-id="${data.message_id}"]`)?.remove();
+                return;
+            }
+            
             const isGlobalMsg = data.conv_id === null;
-
+            
             if (isGlobalMsg) {
                 chatStore.addMessage('public', null, data);
             }

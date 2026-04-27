@@ -28,7 +28,6 @@ $dispatcher = FastRoute\simpleDispatcher(function(RouteCollector $r){
     
     $r->addRoute('POST', '/api/get-user-logs', [ChatController::class, 'getUserLogs']);
     $r->addRoute('POST', '/api/make-conv', [ChatController::class, 'makeConversation']);
-    $r->addRoute('POST', '/api/send-message', [ChatController::class, 'sendMessage']);
     
 });
 

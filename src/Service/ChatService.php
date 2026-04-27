@@ -1,6 +1,7 @@
 <?php
 namespace Spn\Service;
 
+use Spn\Exceptions\ChatException;
 use Spn\Repository\ChatRepository;
 use Spn\Repository\UserRepository;
 
@@ -60,31 +61,51 @@ class ChatService{
     public function sendMessage(array $msg): array
     {
         if(empty($msg['conv_id'])){
-            if(!$this->chatRepo->savePublicMessage($msg)){
+            $newMsg = $this->chatRepo->savePublicMessage($msg);
+            if(!$newMsg){
                 throw new \Spn\Exceptions\ChatException("Kunne ikke dytte PublicMessage!");
             }
+            $msg['id'] = $newMsg['id'];
+            $msg['date_sent'] = $newMsg['date_sent'];
             return $msg;
         }
         
         $msg['participant_ids'] = $this->chatRepo->getConvMembersByConvId($msg['conv_id']);
+        $newMsg = $this->chatRepo->savePrivateMessage($msg);
         
-        if(!$this->chatRepo->savePrivateMessage($msg)){
+        if(!$newMsg){
            throw new \Spn\Exceptions\ChatException("Kunne ikke dytte PrivateMessage!");
         }
-
+        
+        $msg['id'] = $newMsg['id'];
+        $msg['date_sent'] = $newMsg['date_sent'];
+        
         return $msg; 
     }
 
-    public function removeMessage(int $id, ?int $convId)
+    public function removeMessage(int $msgId, int $userId, ?int $convId = null): bool|array
     {   
-        if($convId === NULL){
-            return $this->chatRepo->removePublicMessage($id);
+        if(!$convId){
+            if(!$this->chatRepo->removePublicMessage($msgId, $userId)){
+                throw new ChatException("Kunne ikke slette public message: ", $msgId);
+            }
+            return true;
         }
-        return $this->chatRepo->removePrivateMessage($id);
+        
+        if(!$this->chatRepo->removePrivateMessage($msgId, $userId, $convId)){
+            throw new ChatException("Kunne ikke slette private message: ", $msgId);
+        }
+        
+        return $this->chatRepo->getConvMembersByConvId($convId);
     }
 
-    public function removeConversation(int $id, int $user_id)
+    public function removeConversationMember(int $userId, int $convId): bool
     {
-        
+        return false;
+    }
+    
+    public function removeConversation(int $id, int $user_id): bool
+    {
+        return false;
     }
 }

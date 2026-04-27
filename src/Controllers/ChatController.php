@@ -98,37 +98,4 @@ class ChatController{
             exit;
         }
     }
-    
-    //send user message
-    public function sendMessage(): void
-    {
-        $data = json_decode(file_get_contents('php://input'), true);
-        try{
-            $this->chat->sendMessage($data);
-            exit;
-        }
-        catch(\Spn\Exceptions\InvalException $e){
-            echo json_encode([
-                "class" => "error",
-                "message" => $e->getMessage()
-            ]);
-            exit;
-        }
-        catch(\Spn\Exceptions\DatabaseException $e){
-            error_log($e->getMessage());
-            echo json_encode([
-                "class" => "error",
-                "message" => "Noe gikk galt! Vennligst prøv igjen"
-            ]);
-            exit;
-        }
-        catch(\Exception $e){
-            error_log($e->getMessage());
-            echo json_encode([
-                "class" => "error",
-                "message" => "Ukjent feil!"
-            ]);
-            exit;
-        }
-    }
 }

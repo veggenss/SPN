@@ -149,48 +149,103 @@ class ChatRepository{
         }
     }
     
-    public function savePrivateMessage(array $data)
+    public function savePrivateMessage(array $data): array
     {
         try{
-            $stmt = $this->conn->prepare('INSERT INTO private_messages (conversation_id, sender_id, message) VALUES (?, ?, ?);');
+            $stmt = $this->conn->prepare('INSERT INTO private_messages (conversation_id, sender_id, message) VALUES (?, ?, ?) RETURNING id, date_sent;');
             $stmt->bind_param("iis", $data['conv_id'], $data['sender_id'], $data['message']);
+            $stmt->execute();
             
-            $status = $stmt->execute();
+            $stmtRes = $stmt->get_result();
             $stmt->close();
-            return $status;
+            
+            $msgData = $stmtRes->fetch_assoc();
+            $stmtRes->free();
+            
+            return $msgData;
         }
         catch(\mysqli_sql_exception $e){
             throw new \Spn\Exceptions\DatabaseException("Private Message Insetion Failed: " . $e->getMessage(), 0, $e);
         }
     }
     
-    public function savePublicMessage(array $data)
+    public function savePublicMessage(array $data): array
     {
         try{
-            $stmt = $this->conn->prepare('INSERT INTO public_messages (sender_id, message) VALUES (?, ?);');
+            $stmt = $this->conn->prepare('INSERT INTO public_messages (sender_id, message) VALUES (?, ?) RETURNING id, date_sent;');
             $stmt->bind_param("is", $data['sender_id'], $data['message']);
+            $stmt->execute();
             
-            $status = $stmt->execute();
+            $stmtRes = $stmt->get_result();
             $stmt->close();
-            return $status;
+            
+            $msgData = $stmtRes->fetch_assoc();
+            $stmtRes->free();
+            
+            return $msgData;
         }
         catch(\mysqli_sql_exception $e){
             throw new \Spn\Exceptions\DatabaseException("Public Message Insetion Failed: " . $e->getMessage(), 0, $e);
         }
     }
     
-    public function removePrivateMessage(int $id)
+    public function removePrivateMessage(int $msgId, int $userId, int $convId): bool
     {
-        
+        try{
+            $stmt = $this->conn->prepare('DELETE FROM private_messages pm WHERE pm.id = ? AND pm.sender_id = ? AND pm.conversation_id = ?');
+            $stmt->bind_param("iii", $msgId, $userId, $convId);
+            
+            $status = $stmt->execute();
+            $stmt->close();
+            return $status;
+        }
+        catch(\mysqli_sql_exception $e){
+            throw new \Spn\Exceptions\DatabaseException("Private Message Deletion Failed: " . $e->getMessage(), 0, $e);
+        }
     }
     
-    public function removePublicMessage(int $id)
+    public function removePublicMessage(int $msgId, int $userId): bool
     {
-        
+        try{
+            $stmt = $this->conn->prepare('DELETE FROM public_messages pm WHERE pm.id = ? AND pm.sender_id = ?');
+            $stmt->bind_param("ii", $msgId, $userId);
+            
+            $status = $stmt->execute();
+            $stmt->close();
+            return $status;
+        }
+        catch(\mysqli_sql_exception $e){
+            throw new \Spn\Exceptions\DatabaseException("Public Message Deletion Failed: " . $e->getMessage(), 0, $e);
+        }
     }
     
-    public function removeConversation(int $id)
+    public function removeConversationMember(int $convId, $userId): bool
     {
-        
+        try{
+            $stmt = $this->conn->prepare('DELETE FROM conversation_members cm WHERE cm.conversation_id = ? AND cm.user_id = ?');
+            $stmt->bind_param("ii", $convId, $userId);
+            
+            $status = $stmt->execute();
+            $stmt->close();
+            return $status;
+        }
+        catch(\mysqli_sql_exception $e){
+            throw new \Spn\Exceptions\DatabaseException("Remove Conversation Member Failed: " . $e->getMessage(), 0, $e);
+        }
+    }
+    
+    public function removeConversation(int $convId): bool
+    {
+        try{
+            $stmt = $this->conn->prepare('DELETE FROM conversations c WHERE c.id = ?');
+            $stmt->bind_param("i", $convId);
+            
+            $status = $stmt->execute();
+            $stmt->close();
+            return $status;
+        }
+        catch(\mysqli_sql_exception $e){
+            throw new \Spn\Exceptions\DatabaseException("Conversation Deletion Failed: " . $e->getMessage(), 0, $e);
+        }
     }
 }

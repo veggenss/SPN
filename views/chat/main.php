@@ -28,7 +28,10 @@
      
          <div id="conv-list"></div>
       </div>
- 
+      
+      <div id="msg-ctx-menu" class="context-menu" hidden>
+         <button id="ctx-delete"><i class="fa-regular fa-trash-can"></i> Slett Melding</button>
+      </div>
       <div class="chat">
           <div id="alert-container"></div>
           <div id="messages"></div>
@@ -40,11 +43,22 @@
       
       <div class="panel-right">
           <h3>Detaljer</h3>
-          <p>Velg en samtale for å se informasjon.</p>
+          <div id="chat-details">
+             <p id="chat-name"></p>
+             
+             <!-- if conv: all users apart of the conv. If global chat: every user who has sent a message -->
+             <div id="chat-participants"></div>
+             <!-- leave conv button -->
+             
+             <div id="conv-actions" hidden>
+                <button id="conv-rename-btn"><i class="fa-solid fa-pencil"></i> Endre Samtale Navn</button>
+                <button id="conv-leave-btn" class="btn-danger"><i class="fa-solid fa-right-from-bracket"></i> Forlat Samtale</button>
+             </div>
+          </div>
       </div>
    </div>
    
-   <!-- Dialog: Ny Samtale -->
+   <!-- ny samtale -->
    <dialog id="create-conversation">
       <div class="dialog-inner">
          <div class="dialog-header">
@@ -74,7 +88,7 @@
       </div>
    </dialog>
    
-   <!-- Dialog: Min Profil -->
+   <!-- min profil -->
    <dialog id="my-profile">
       <div class="dialog-inner">
          <div class="dialog-header">
@@ -114,7 +128,6 @@
          </form>
       </div>
    </dialog>
- 
 </body>
 
 <script>
