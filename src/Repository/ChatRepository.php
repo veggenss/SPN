@@ -192,7 +192,7 @@ class ChatRepository{
     public function removePrivateMessage(int $msgId, int $userId, int $convId): bool
     {
         try{
-            $stmt = $this->conn->prepare('DELETE FROM private_messages pm WHERE pm.id = ? AND pm.sender_id = ? AND pm.conversation_id = ?');
+            $stmt = $this->conn->prepare('DELETE FROM private_messages WHERE id = ? AND sender_id = ? AND conversation_id = ?');
             $stmt->bind_param("iii", $msgId, $userId, $convId);
             
             $status = $stmt->execute();
@@ -207,7 +207,7 @@ class ChatRepository{
     public function removePublicMessage(int $msgId, int $userId): bool
     {
         try{
-            $stmt = $this->conn->prepare('DELETE FROM public_messages pm WHERE pm.id = ? AND pm.sender_id = ?');
+            $stmt = $this->conn->prepare('DELETE FROM public_messages WHERE id = ? AND sender_id = ?');
             $stmt->bind_param("ii", $msgId, $userId);
             
             $status = $stmt->execute();

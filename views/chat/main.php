@@ -120,7 +120,11 @@
                   placeholder="<?php echo htmlspecialchars($_SESSION['user']['email']); ?>"
                   value="<?php echo htmlspecialchars($_SESSION['user']['email']); ?>">
             </div>
- 
+            
+            <div class="form-group">
+                <button type=""></button>
+            </div>
+            
             <div class="dialog-actions">
                <button type="button" class="btn-ghost dialog-cancel">Avbryt</button>
                <button type="submit">Lagre</button>
