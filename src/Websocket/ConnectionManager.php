@@ -52,11 +52,11 @@ class ConnectionManager
     }
     
     public function pruneDeadFds($server): void
-       {
-           foreach ($this->table as $fd => $row) {
-               if (!$server->isEstablished($fd)) {
-                   $this->remove($fd);
-               }
-           }
-       }
+    {
+        foreach ($this->table as $fd => $row) {
+            if (!$server->isEstablished($fd)) {
+                $this->remove($fd);
+            }
+        }
+    }
 }

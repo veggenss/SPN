@@ -28,7 +28,9 @@ $dispatcher = FastRoute\simpleDispatcher(function(RouteCollector $r){
     
     $r->addRoute('POST', '/api/get-user-logs', [ChatController::class, 'getUserLogs']);
     $r->addRoute('POST', '/api/make-conv', [ChatController::class, 'makeConversation']);
-    
+
+    $r->addRoute('POST', '/api/update-user', [UserController::class, 'updateUser']);
+    $r->addRoute('POST', '/api/delete-user', [UserController::class, 'deleteUser']);
 });
 
 $httpMethod = $_SERVER['REQUEST_METHOD'];

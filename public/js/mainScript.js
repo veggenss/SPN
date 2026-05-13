@@ -245,22 +245,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const ok = await makeConversation(data.convName, participants);
                 if (ok) dialog.close();
             }
-        );
-
-        setupDialog(
-            'my-profile',
-            'open-profile',
-            'my-profile-form',
-            null,
-            async (data, dialog, form) => {
-                const ok = await saveProfile(data);
-                if (ok) dialog.close();
-            }
-        );
- 
+        ); 
+        
         newConvPartyAdd.addEventListener('click', () => {
             if (getNewConvPartyCount() >= 9) return;
- 
+
             const wrapper = document.createElement('div');
             wrapper.classList.add('participant');
             wrapper.innerHTML = `
@@ -270,6 +259,31 @@ document.addEventListener('DOMContentLoaded', () => {
             wrapper.querySelector('.remove').onclick = () => wrapper.remove();
             newConvPartyInput.appendChild(wrapper);
         });
+        
+        setupDialog(
+            'my-profile',
+            'open-profile',
+            'my-profile-form',
+            null,
+            async (data, dialog, form) => {
+                const ok = await saveProfile(data);
+                if(ok) dialog.close();
+            }
+        );
+        
+        setupDialog(
+            'password-confirmation',
+            'delete-user-btn',
+            'delete-user-form',
+            null,
+            async (data, dialog, form) => {
+                console.log(data);
+                const agree = confirm("Er du sikker at du vil slette brukeren din?");
+                if(!agree) return;
+                await deleteUser(data.password);
+            }
+        )
+
     }
     
     
@@ -280,7 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.addEventListener('click', hideContextMenu);
         
         input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
+            if(e.key === 'Enter') {
                 e.preventDefault();
                 sendMessage();
             }
@@ -306,7 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctxDelete.addEventListener('click', () => {
             if(ctxTargetMsgId) deleteMessage(ctxTargetMsgId, activeConvId);
             hideContextMenu();
-        })
+        });
     }
 
     
@@ -356,26 +370,49 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    async function saveProfile(){
-        try{
+    async function saveProfile(formInput){  
+        try {
             const formData = new FormData();
-            Object.entries(data).forEach(([k, v]) => formData.append(k, v));
-            
+            Object.entries(formInput).forEach(([k, v]) => formData.append(k, v));
+    
             const fileInput = document.getElementById('profile_picture');
-            if(fileInput[0]) formData.append('profile_picture', fileInput.files[0]);
-            
-            const req = await fetch('/api/save-prifile', { method: 'POST', body: formData });
-            const data = await req.json();
-            
-            if(data.class === "error"){
-                const dialog = documetn.getElementById('my-profile');
-                showDialogError(dialog, data.message);
+            if (fileInput.files[0]) formData.append('profile_picture', fileInput.files[0]);
+    
+            const req = await fetch('/api/save-profile', {
+                method: 'POST',
+                body: formData
+            });
+            const res = await req.json();
+    
+            if (res.class === 'error') {
+                showDialogError(document.getElementById('my-profile'), res.message);
                 return false;
             }
             return true;
         }
+        catch(err) {
+            console.error('saveProfile:', err);
+            return false;
+        }
+    }
+    
+    async function deleteUser(password) {
+        try{
+            const req = await fetch('/api/delete-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: password })
+            });
+            const data = await req.json();
+            if (data.class === 'error') {
+                const dialog = document.getElementById('password-confirmation');
+                showDialogError(dialog, data.message);
+                return false;
+            }
+            window.location.href = '/logout'; 
+        }
         catch(err){
-            console.error("saveProfile: ", err);
+            console.error('deleteAccount:', err);
             return false;
         }
     }

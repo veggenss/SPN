@@ -120,9 +120,15 @@
                   placeholder="<?php echo htmlspecialchars($_SESSION['user']['email']); ?>"
                   value="<?php echo htmlspecialchars($_SESSION['user']['email']); ?>">
             </div>
-            
+
             <div class="form-group">
-                <button type=""></button>
+               <label for="prof-password">Nytt Passord</label>
+               <input type="password" id="prof-password" name="password" placeholder="La stå tom for å beholde nåværende">
+            </div>
+
+            <div class="danger-zone">
+               <p>Farlig Sone</p>
+               <button type="button" id="delete-user-btn" class="btn-danger"><i class="fa-solid fa-trash-can"></i> Slett Konto</button>
             </div>
             
             <div class="dialog-actions">
@@ -131,6 +137,27 @@
             </div>
          </form>
       </div>
+   </dialog>
+   
+   <!--delete user confirmation-->
+   <dialog id="password-confirmation">
+       <div class="dialog-inner">
+           <div class="dialog-header">
+              <h2>Passord Konfirmasjon</h2>
+              <button class="dialog-close" type="button" aria-label="Lukk"><i class="fa-solid fa-xmark"></i></button>
+           </div>
+           <form id="delete-user-form">
+               <div class="form-group">
+                  <label for="prof-password">Skriv Passord for å Slette Bruker</label>
+                  <input type="password" id="prof-password" name="password" placeholder="Ditt Passord" required>
+               </div>
+               
+               <div class="dialog-actions">
+                  <button type="button" class="btn-ghost dialog-cancel">Avbryt</button>
+                  <button type="submit">Fortsett</button>
+               </div> 
+           </form>
+       </div>
    </dialog>
 </body>
 

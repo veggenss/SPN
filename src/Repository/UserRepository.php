@@ -152,15 +152,17 @@ class UserRepository{
         }
     }
     
-    public function remove(int $id): bool
-    {
+    public function removeUser(int $id): bool
+    {   
+        $deletedUsername = "deleted_user" . bin2hex(random_bytes(6));
+        $deletedEmail = "deleted_" . $id . "@deleted.invalid";
         try {
-            $stmt = $this->conn->prepare('UPDATE users SET deleted = true WHERE id = ?');
-            $stmt->bind_param("i", $id);
+            $stmt = $this->conn->prepare("UPDATE users SET username = ?, password = ?, verify_email = null, deleted = true WHERE id = ?");
+            $stmt->bind_param("ssi", $deletedUsername, $deletedEmail, $id);
             
-            $user = $stmt->execute();
+            $status = $stmt->execute();
             $stmt->close();
-            return $user;
+            return $status;
         }
         catch(\mysqli_sql_exception $e){
            throw new \Spn\Exceptions\DatabaseException("Failed to remove user: " . $e->getMessage(), 0, $e); 

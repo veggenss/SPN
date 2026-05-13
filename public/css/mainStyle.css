@@ -375,7 +375,19 @@ button:hover {
     font-size: 0.9rem;
 }
 
+.danger-zone {
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
 
+.danger-zone > p {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--negative-text);
+}
 
 .context-menu {
     position: fixed;
@@ -450,8 +462,6 @@ dialog::backdrop {
     backdrop-filter: blur(4px);
 }
 
-
-
 .dialog-inner {
     background: var(--bg-panel);
     border-radius: var(--radius);
@@ -501,7 +511,6 @@ dialog form {
     flex-direction: column;
     gap: 16px;
     padding: 22px;
-    /* reset inherited dialog form styles */
     background: transparent;
     border: none;
     box-shadow: none;
@@ -509,7 +518,7 @@ dialog form {
     border-radius: 0;
 }
 
-/* label + input pair */
+
 .form-group {
     display: flex;
     flex-direction: column;
